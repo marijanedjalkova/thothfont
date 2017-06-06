@@ -1,0 +1,16 @@
+@font-face {
+    font-family: myFirstFont;
+    src: url('myfont.otf'); format('opentype');
+	-webkit-font-feature-settings: "ss01" on;
+	-moz-font-feature-settings: "ss01" on;
+	font-feature-settings: "ss01" on;
+	-webkit-font-feature-settings: "liga=1";
+	-moz-font-feature-settings: "liga" on;
+	font-feature-settings: "liga";
+}
+
+span {
+	color:blue;
+	font-size: 20pt;
+    font-family: myFirstFont;
+}
