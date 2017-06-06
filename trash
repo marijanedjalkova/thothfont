@@ -1,0 +1,870 @@
+import fontforge
+
+from feature_constants import *
+from feature_file_format import *
+
+font_sfd = 'myfont.sfd'
+font_otf = 'myfont.otf'
+feature_file_name = 'hiero.fea'
+
+############################################
+# Auxiliary symbols. The type t is indicated by a suffix 'base' or 'mark'.
+# The default is 'base'.
+
+# Turn prefix of auxiliary symbol into a based/mark symbol.
+def aux_type(a,t):
+	return a + t
+def auxs_type(l):
+	return [aux_type(a,t) for a in l]
+
+# Auxiliary symbols for operators and brackets.
+def hor_open(t='base'):
+	return 'hor.open.' + t
+def hor_op(t='base'):
+	return 'hor.op.' + t
+def hor_close(t='base'):
+	return 'hor.close.' + t
+def vert_open(t='base'):
+	return 'vert.open.' + t
+def vert_op(t='base'):
+	return 'vert.op.' + t
+def vert_close(t='base'):
+	return 'vert.close.' + t
+# Classes of symbols.
+def hor_any(t=''):
+	return [hor_open(t),hor_op(t),hor_close(t)]
+def vert_any(t=''):
+	return [vert_open(t),vert_op(t),vert_close(t)]
+
+# Generic record field.
+def rec_field(record, field, val, t):
+	return record + '.' + field + '.' + str(val) + '.' + t
+
+# Record for horizontal group.
+def hrec_bw(w,t='mark'):
+	return rec_field('hrec','bw',w,t)
+def hrec_w(w,t='mark'):
+	return rec_field('hrec','w',w,t)
+def hrec_h(h,t='mark'):
+	return rec_field('hrec','h',h,t)
+def hrec_s(s,t='mark'):
+	return rec_field('hrec','s',s,t)
+def hrec_tx(x,t='mark'):
+	return rec_field('hrec','tx',x,t)
+def hrec_ty(y,t='mark'):
+	return rec_field('hrec','ty',y,t)
+def hrec_tw(w,t='mark'):
+	return rec_field('hrec','tw',w,t)
+def hrec_th(h,t='mark'):
+	return rec_field('hrec','th',h,t)
+# Initial values.
+def hrec_init(t='base'):
+	return [hrec_bw('nil',t),hrec_w('nil',t),hrec_h('nil',t),hrec_s('nil',t),
+		hrec_tx('nil',t),hrec_ty('nil',t),hrec_tw('nil',t),hrec_th('nil',t)]
+# Classes of symbols.
+def hrec_bw_any(t=''):
+	return [hrec_bw(w,t) for w in ['nil'] + all_glyph_sizes]
+def hrec_w_any(t=''):
+	return [hrec_w(w,t) for w in ['nil'] + all_group_widths]
+def hrec_h_any(t=''):
+	return [hrec_h(h,t) for h in ['nil'] + all_glyph_sizes]
+def hrec_s_any(t=''):
+	return [hrec_s(s,t) for s in ['nil'] + all_group_scalings]
+def hrec_tx_any(t=''):
+	return [hrec_tx(x,t) for x in ['nil'] + all_coords]
+def hrec_ty_any(t=''):
+	return [hrec_ty(y,t) for y in ['nil'] + all_coords]
+def hrec_tw_any(t=''):
+	return [hrec_tw(w,t) for w in ['nil'] + all_coords]
+def hrec_th_any(t=''):
+	return [hrec_th(h,t) for h in ['nil'] + all_coords]
+def hrec_any(t=''):
+	return hrec_bw_any(t) + hrec_w_any(t) + hrec_h_any(t) + hrec_s_any(t) + \
+		hrec_tx_any(t) + hrec_ty_any(t) + hrec_tw_any(t) + hrec_th_any(t)
+
+# Record for suffix of horizontal group.
+def shrec_w(w,t='mark'):
+	return rec_field('shrec','w',w,t)
+def shrec_h(h,t='mark'):
+	return rec_field('shrec','h',h,t)
+def shrec_tx(x,t='mark'):
+	return rec_field('shrec','tx',x,t)
+def shrec_ty(y,t='mark'):
+	return rec_field('shrec','ty',y,t)
+def shrec_tw(w,t='mark'):
+	return rec_field('shrec','tw',w,t)
+def shrec_th(h,t='mark'):
+	return rec_field('shrec','th',h,t)
+# Initial values.
+def shrec_init(t='base'):
+	return [shrec_w('nil',t),shrec_h('nil',t),
+		shrec_tx('nil',t),shrec_ty('nil',t),shrec_tw('nil',t),shrec_th('nil',t)]
+def shrec_init_zero(t='base'):
+	return [shrec_w(0,t),shrec_h(0,t),
+		shrec_tx('nil',t),shrec_ty('nil',t),shrec_tw('nil',t),shrec_th('nil',t)]
+# Classes of symbols.
+def shrec_w_any(t=''):
+	return [shrec_w(w,t) for w in ['nil'] + all_suffix_group_widths]
+def shrec_h_any(t=''):
+	return [shrec_h(h,t) for h in ['nil'] + all_glyph_sizes_and_zero]
+def shrec_tx_any(t=''):
+	return [shrec_tx(x,t) for x in ['nil'] + all_coords]
+def shrec_ty_any(t=''):
+	return [shrec_ty(y,t) for y in ['nil'] + all_coords]
+def shrec_tw_any(t=''):
+	return [shrec_tw(w,t) for w in ['nil'] + all_coords]
+def shrec_th_any(t=''):
+	return [shrec_th(h,t) for h in ['nil'] + all_coords]
+def shrec_any(t=''):
+	return shrec_w_any(t) + shrec_h_any(t) + \
+		shrec_tx_any(t) + shrec_ty_any(t) + shrec_tw_any(t) + shrec_th_any(t)
+
+# Record for vertical group.
+def vrec_w(w,t='mark'):
+	return rec_field('vrec','w',w,t)
+def vrec_bh(h,t='mark'):
+	return rec_field('vrec','bh',h,t)
+def vrec_h(h,t='mark'):
+	return rec_field('vrec','h',h,t)
+def vrec_tx(x,t='mark'):
+	return rec_field('vrec','tx',x,t)
+def vrec_ty(y,t='mark'):
+	return rec_field('vrec','ty',y,t)
+def vrec_tw(w,t='mark'):
+	return rec_field('vrec','tw',w,t)
+def vrec_th(h,t='mark'):
+	return rec_field('vrec','th',h,t)
+# Initial values.
+def vrec_init(t='base'):
+	return [vrec_w('nil',t),vrec_bh('nil',t),vrec_h('nil',t),
+		vrec_tx('nil',t),vrec_ty('nil',t),vrec_tw('nil',t),vrec_th('nil',t)]
+# Classes of symbols.
+def vrec_w_any(t=''):
+	return [vrec_w(w,t) for w in ['nil'] + all_glyph_sizes]
+def vrec_bh_any(t=''):
+	return [vrec_bh(h,t) for h in ['nil'] + all_glyph_sizes]
+def vrec_h_any(t=''):
+	return [vrec_h(h,t) for h in ['nil'] + all_group_heights]
+def vrec_tx_any(t=''):
+	return [vrec_tx(x,t) for x in ['nil'] + all_coords]
+def vrec_ty_any(t=''):
+	return [vrec_ty(y,t) for y in ['nil'] + all_coords]
+def vrec_tw_any(t=''):
+	return [vrec_tw(w,t) for w in ['nil'] + all_coords]
+def vrec_th_any(t=''):
+	return [vrec_th(h,t) for h in ['nil'] + all_coords]
+def vrec_any(t=''):
+	return vrec_w_any(t) + vrec_bh_any(t) + vrec_h_any(t) + \
+		vrec_tx_any(t) + vrec_ty_any(t) + vrec_tw_any(t) + vrec_th_any(t)
+
+# Record for suffix of vertical group.
+def svrec_w(w,t='mark'):
+	return rec_field('svrec','w',w,t)
+def svrec_h(h,t='mark'):
+	return rec_field('svrec','h',h,t)
+def svrec_tx(x,t='mark'):
+	return rec_field('svrec','tx',x,t)
+def svrec_ty(y,t='mark'):
+	return rec_field('svrec','ty',y,t)
+def svrec_tw(w,t='mark'):
+	return rec_field('svrec','tw',w,t)
+def svrec_th(h,t='mark'):
+	return rec_field('svrec','th',h,t)
+# Initial values.
+def svrec_init(t='base'):
+	return [svrec_w('nil',t),svrec_h('nil',t),
+		svrec_tx('nil',t),svrec_ty('nil',t),svrec_tw('nil',t),svrec_th('nil',t)]
+def svrec_init_zero(t='base'):
+	return [svrec_w(0,t),svrec_h(0,t),
+		svrec_tx('nil',t),svrec_ty('nil',t),svrec_tw('nil',t),svrec_th('nil',t)]
+# Classes of symbols.
+def svrec_w_any(t=''):
+	return [svrec_w(w,t) for w in ['nil'] + all_glyph_sizes_and_zero]
+def svrec_h_any(t=''):
+	return [svrec_h(h,t) for h in ['nil'] + all_suffix_group_heights]
+def svrec_tx_any(t=''):
+	return [svrec_tx(x,t) for x in ['nil'] + all_coords]
+def svrec_ty_any(t=''):
+	return [svrec_ty(y,t) for y in ['nil'] + all_coords]
+def svrec_tw_any(t=''):
+	return [svrec_tw(w,t) for w in ['nil'] + all_coords]
+def svrec_th_any(t=''):
+	return [svrec_th(h,t) for h in ['nil'] + all_coords]
+def svrec_any(t=''):
+	return svrec_w_any(t) + svrec_h_any(t) + \
+		svrec_tx_any(t) + svrec_ty_any(t) + svrec_tw_any(t) + svrec_th_any(t)
+
+# Record for glyph.
+def grec_s(s,t='mark'):
+	return rec_field('grec','s',s,t)
+def grec_w(w,t='mark'):
+	return rec_field('grec','w',w,t)
+def grec_h(h,t='mark'):
+	return rec_field('grec','h',h,t)
+def grec_sw(s,t='mark'):
+	return rec_field('grec','sw',s,t)
+def grec_sh(s,t='mark'):
+	return rec_field('grec','sh',s,t)
+def grec_tx(x,t='mark'):
+	return rec_field('grec','tx',x,t)
+def grec_ty(y,t='mark'):
+	return rec_field('grec','ty',y,t)
+def grec_tw(w,t='mark'):
+	return rec_field('grec','tw',w,t)
+def grec_th(h,t='mark'):
+	return rec_field('grec','th',h,t)
+# Classes of symbols.
+def grec_s_any(t=''):
+	return [grec_s(s,t) for s in ['nil'] + all_glyph_scalings]
+def grec_w_any(t=''):
+	return [grec_w(w,t) for w in ['nil'] + all_glyph_sizes]
+def grec_h_any(t=''):
+	return [grec_h(h,t) for h in ['nil'] + all_glyph_sizes]
+def grec_sw_any(t=''):
+	return [grec_sw(s,t) for s in ['nil'] + all_group_scalings]
+def grec_sh_any(t=''):
+	return [grec_sh(s,t) for s in ['nil'] + all_glyph_scalings]
+def grec_tx_any(t=''):
+	return [grec_tx(x,t) for x in ['nil'] + all_coords]
+def grec_ty_any(t=''):
+	return [grec_ty(y,t) for y in ['nil'] + all_coords]
+def grec_tw_any(t=''):
+	return [grec_tw(w,t) for w in ['nil'] + all_coords]
+def grec_th_any(t=''):
+	return [grec_th(h,t) for h in ['nil'] + all_coords]
+def grec_any(t=''):
+	return grec_s_any(t) + grec_w_any(t) + grec_h_any(t) +  \
+		grec_sw_any(t) + grec_sh_any(t) + \
+		grec_tx_any(t) + grec_ty_any(t) + grec_tw_any(t) + grec_th_any(t)
+
+# Further auxiliary symbols, treated as base.
+def grec_dim(w,h):
+	return 'grec.dim.' + str(w) + '.' + str(h)
+def grec_dim_all():
+	syms = []
+	for w in all_glyph_sizes:
+		for h in all_glyph_sizes:
+			syms += [grec_dim(w,h)]
+	return syms
+def grec_preaux():
+	return 'grec.preaux'
+def grec_postaux():
+	return 'grec.postaux'
+def grec_anchor():
+	return 'grec.anchor'
+def grec_aux_all():
+	return grec_dim_all() + [grec_preaux(), grec_postaux(), grec_anchor()]
+
+# Auxiliary symbol for glyph, which is mark.
+def glyph_mark(g):
+	return g + '.mark'
+
+############################################
+
+def record_symbols(t):
+	return hor_any(t) + vert_any(t) + \
+		hrec_any(t) + shrec_any(t) + vrec_any(t) + svrec_any(t) + \
+		grec_any(t)
+
+def add_aux_symbols_to(font):
+	base_names = record_symbols('base') + grec_aux_all()
+	mark_names = record_symbols('mark')
+
+	i = aux_code_area
+	for name in base_names:
+		font.createChar(i, name)
+		glyph = font[i]
+		glyph.glyphclass = 'baseglyph'
+		font[i].width = 0
+		i += 1
+	for name in mark_names:
+		font.createChar(i, name)
+		glyph = font[i]
+		glyph.glyphclass = 'mark'
+		font[i].width = 0
+		i += 1
+
+# Make sure glyphs are not marks.
+def make_non_mark_glyphs(font):
+	return
+	# for name in all_glyphs:
+	for i in [65,66,67]:
+		glyph = font.createChar(i)
+		glyph.glyphclass = 'baseglyph'
+
+##################################################
+
+# All symbols that are visible (mark rather than base).
+mark_aux_symbols = []
+
+# Make the symbols the only mark symbols.
+def make_only_visible(f, marks):
+	global mark_aux_symbols
+	symbols_to_base = list(set(mark_aux_symbols) - set(marks))
+	symbols_to_mark = list(set(marks) - set(mark_aux_symbols))
+	if len(symbols_to_base) + len(symbols_to_mark) > 0:
+		start_lookup(f)
+		for sym in symbols_to_base:
+			create_sub(f, [aux_type(sym,'mark')], [aux_type(sym,'base')])
+		for sym in symbols_to_mark:
+			create_sub(f, [aux_type(sym,'base')], [aux_type(sym,'mark')])
+		end_lookup(f)
+	mark_aux_symbols = marks
+
+##################################################
+
+def initialize(f):
+	start_lookup(f)
+	create_sub(f, ['asterisk'],[hor_op()])
+	create_sub(f, ['colon'],[vert_op()])
+	end_lookup(f)
+
+def add_brackets(f):
+	start_lookup(f)
+	for (g,w,h) in glyph_descriptions:
+		create_sub(f, [g], [grec_preaux(),g,grec_dim(w,h)])
+	end_lookup(f)
+
+	start_lookup(f)
+	create_sub(f, [grec_preaux()], [vert_open(),hor_open(),grec_anchor()])
+	for w in all_glyph_sizes:
+		for h in all_glyph_sizes:
+			create_sub(f, [grec_dim(w,h)], 
+				[grec_s('nil','base'),grec_w(w,'base'),grec_h(h,'base'),grec_postaux()])
+	end_lookup(f)
+
+	start_lookup(f)
+	create_sub(f, [grec_postaux()], 
+		[grec_sw('nil','base'),grec_sh('nil','base'), 
+			grec_tx('nil','base'),grec_ty('nil','base'),
+			grec_tw('nil','base'),grec_th('nil','base'), 
+			hor_close(),vert_close()])
+	end_lookup(f)
+
+def remove_brackets(f):
+	start_lookup(f)
+	create_sub(f, [vert_close(),hor_op(),vert_open()], [hor_op()])
+	create_sub(f, [vert_close(),vert_op(),vert_open()], [vert_op()])
+	end_lookup(f)
+
+	start_lookup(f)
+	create_sub(f, [hor_close(),hor_op(),hor_open()], [hor_op()])
+	end_lookup(f)
+
+def add_records(f):
+	start_lookup(f)
+	create_sub(f, [hor_open()], [hor_open()] + hrec_init())
+	create_sub(f, [hor_op()], shrec_init() + [hor_op()])
+	create_sub(f, [hor_close()], shrec_init_zero() + [hor_close()])
+	create_sub(f, [vert_open()], [vert_open()] + vrec_init())
+	create_sub(f, [vert_op()], svrec_init() + [vert_op()])
+	create_sub(f, [vert_close()], svrec_init_zero() + [vert_close()])
+	end_lookup(f)
+
+def sum_widths(f):
+	make_only_visible(f, hrec_bw_any()+hrec_w_any()+shrec_w_any()+grec_w_any())
+	for n in range(max_hor_group_len-1):
+		start_mark_lookup(f)
+		for w1 in all_glyph_sizes:
+			for w2 in group_sizes_len(n):
+				create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)],
+					shrec_w(w1+w2))
+		end_lookup(f)
+
+	start_mark_lookup(f)
+	for w1 in all_glyph_sizes:
+		for w2 in group_sizes_len_zero_to(max_hor_group_len-1):
+			create_sub_mid(f, [], [hrec_w('nil')], [grec_w(w1),shrec_w(w2)], 
+				hrec_w(w1+w2))
+	end_lookup(f)
+
+	start_mark_lookup(f)
+	for w in group_sizes_len_one_to(max_hor_group_len):
+		create_sub_mid(f, [], [hrec_bw('nil')], [hrec_w(w)], 
+			hrec_bw(min(w,max_glyph_size)))
+	end_lookup(f)
+
+def max_heights(f):
+	make_only_visible(f, hrec_h_any()+shrec_h_any()+grec_h_any())
+	for n in range(max_hor_group_len-1):
+		start_mark_lookup(f)
+		for h1 in all_glyph_sizes:
+			tail_heights = [0] if n == 0 else all_glyph_sizes
+			for h2 in tail_heights:
+				create_sub_mid(f, [], [shrec_h('nil')], [grec_h(h1),shrec_h(h2)], 
+					shrec_h(max(h1,h2)))
+		end_lookup(f)
+
+	start_mark_lookup(f)
+	for h1 in all_glyph_sizes:
+		for h2 in all_glyph_sizes_and_zero:
+			create_sub_mid(f, [], [hrec_h('nil')], [grec_h(h1),shrec_h(h2)], 
+				hrec_h(max(h1,h2)))
+	end_lookup(f)
+
+def max_widths(f):
+	make_only_visible(f, vrec_w_any()+svrec_w_any()+hrec_bw_any())
+	for n in range(max_vert_group_len-1):
+		start_mark_lookup(f)
+		for w1 in all_glyph_sizes:
+			tail_widths = [0] if n == 0 else all_glyph_sizes
+			for w2 in tail_widths:
+				create_sub_mid(f, [], [svrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
+					svrec_w(max(w1,w2)))
+		end_lookup(f)
+
+	start_mark_lookup(f)
+	for w1 in all_glyph_sizes:
+		for w2 in all_glyph_sizes_and_zero:
+			create_sub_mid(f, [], [vrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
+				vrec_w(max(w1,w2)))
+	end_lookup(f)
+
+def sum_heights(f):
+	make_only_visible(f, vrec_bh_any()+vrec_h_any()+svrec_h_any()+hrec_h_any())
+	for n in range(max_vert_group_len-1):
+		start_mark_lookup(f)
+		for h1 in all_glyph_sizes:
+			for h2 in group_sizes_len(n):
+				create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], 
+					svrec_h(h1+h2))
+		end_lookup(f)
+
+	start_mark_lookup(f)
+	for h1 in all_glyph_sizes:
+		for h2 in group_sizes_len_zero_to(max_vert_group_len-1):
+			create_sub_mid(f, [], [vrec_h('nil')], [hrec_h(h1),svrec_h(h2)], 
+				vrec_h(h1+h2))
+	end_lookup(f)
+
+	start_mark_lookup(f)
+	for h in group_sizes_len_one_to(max_vert_group_len):
+		create_sub_mid(f, [], [vrec_bh('nil')], [vrec_h(h)], 
+			vrec_bh(min(h,max_glyph_size)))
+	end_lookup(f)
+
+def target_x(f):
+	start_lookup(f)
+	create_sub(f, [vrec_tx('nil','base')],[vrec_tx(0,'base')])
+	end_lookup(f)
+
+def target_y(f):
+	start_lookup(f)
+	create_sub(f, [vrec_ty('nil','base')],[vrec_ty(unit_coord,'base')])
+	end_lookup(f)
+
+def target_width(f):
+	make_only_visible(f, vrec_w_any()+vrec_tw_any())
+	start_mark_lookup(f)
+	for w in all_glyph_sizes:
+		create_sub_mid(f, [vrec_w(w)], [vrec_tw('nil')], [],
+			vrec_tw(safe_size_to_coord(w)))
+	end_lookup(f)
+
+def target_height(f):
+	make_only_visible(f, vrec_bh_any()+vrec_th_any())
+	start_mark_lookup(f)
+	for h in all_glyph_sizes:
+		create_sub_mid(f, [vrec_bh(h)], [vrec_th('nil')], [],
+			vrec_th(max(safe_size_to_coord(h),unit_coord)))
+	end_lookup(f)
+
+def prop_vert_x(f):
+	make_only_visible(f, vrec_tx_any()+svrec_tx_any())
+	start_mark_lookup(f)
+	for x in all_coords:
+		create_sub_mid(f, [vrec_tx(x)], [svrec_tx('nil')], [],
+			svrec_tx(x))
+	end_lookup(f)
+
+	for n in range(max_vert_group_len-1):
+		start_mark_lookup(f)
+		for x in all_coords:
+			create_sub_mid(f, [svrec_tx(x)], [svrec_tx('nil')], [],
+				svrec_tx(x))
+		end_lookup(f)
+
+def prop_vert_width(f):
+	make_only_visible(f, vrec_tw_any()+svrec_tw_any())
+	start_mark_lookup(f)
+	for w in all_coords:
+		create_sub_mid(f, [vrec_tw(w)], [svrec_tw('nil')], [],
+			svrec_tw(w))
+	end_lookup(f)
+
+	for n in range(max_vert_group_len-1):
+		start_mark_lookup(f)
+		for w in all_coords:
+			create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
+				svrec_tw(w))
+		end_lookup(f)
+
+def prop_vert_y_height(f):
+	make_only_visible(f, vrec_h_any()+vrec_th_any()+hrec_s_any())
+	start_mark_lookup(f)
+	for h1 in group_sizes_len_one_to(max_vert_group_len):
+		for h2 in all_coords:
+			create_sub_mid(f, [vrec_h(h1),vrec_th(h2)], [hrec_s('nil')], [],
+				hrec_s(safe_coord_size_div(h2,h1)))
+	end_lookup(f)
+
+	make_only_visible(f, vrec_th_any()+hrec_h_any()+hrec_s_any()+hrec_th_any())
+	start_mark_lookup(f)
+	for h in all_glyph_sizes:
+		for s in all_group_scalings:
+			create_sub_mid(f, [hrec_h(h),hrec_s(s)], [hrec_th('nil')], [],
+				hrec_th(safe_size_mult_to_coord(s,h)))
+	end_lookup(f)
+
+	make_only_visible(f, vrec_th_any()+hrec_th_any()+svrec_th_any())
+	start_mark_lookup(f)
+	for h1 in all_coords:
+		for h2 in all_coords:
+			create_sub_mid(f, [vrec_th(h1),hrec_th(h2)], [svrec_th('nil')], [],
+				svrec_th(safe_coord_minus(h1,h2)))
+	end_lookup(f)
+
+	make_only_visible(f, vrec_ty_any()+hrec_th_any()+svrec_ty_any())
+	start_mark_lookup(f)
+	for y in all_coords:
+		for h in all_coords:
+			create_sub_mid(f, [vrec_ty(h),hrec_th(h)], [svrec_ty('nil')], [],
+				svrec_ty(safe_coord_minus(y,h)))
+	end_lookup(f)
+
+	make_only_visible(f, vrec_ty_any()+hrec_ty_any())
+	start_mark_lookup(f)
+	for y in all_coords:
+		create_sub_mid(f, [vrec_ty(y)], [hrec_ty('nil')], [],
+			hrec_ty(y))
+	end_lookup(f)
+
+	for n in range(max_vert_group_len-1,0,-1):
+		make_only_visible(f, svrec_h_any()+svrec_th_any()+hrec_s_any()+vrec_ty_any())
+		start_mark_lookup(f)
+		for h1 in group_sizes_len(n):
+			for h2 in all_coords:
+				create_sub_mid(f, [svrec_h(h1),svrec_th(h2)], [hrec_s('nil')], [],
+					hrec_s(safe_coord_size_div(h2,h1)))
+		end_lookup(f)
+
+		make_only_visible(f, svrec_th_any()+hrec_h_any()+hrec_s_any()+hrec_th_any()+vrec_ty_any())
+		start_mark_lookup(f)
+		for h in all_glyph_sizes:
+			for s in all_group_scalings:
+				create_sub_mid(f, [hrec_h(h),hrec_s(s)], [hrec_th('nil')], [],
+					hrec_th(safe_size_mult_to_coord(s,h)))
+		end_lookup(f)
+
+		make_only_visible(f, svrec_th_any()+hrec_th_any()+vrec_ty_any())
+		start_mark_lookup(f)
+		for h1 in all_coords:
+			for h2 in all_coords:
+				create_sub_mid(f, [svrec_th(h1),hrec_th(h2)], [svrec_th('nil')], [],
+					svrec_th(safe_coord_minus(h1,h2)))
+		end_lookup(f)
+
+		make_only_visible(f, svrec_ty_any()+hrec_th_any()+vrec_ty_any())
+		start_mark_lookup(f)
+		for y in all_coords:
+			for h in all_coords:
+				create_sub_mid(f, [svrec_ty(h),hrec_th(h)], [svrec_ty('nil')], [],
+					svrec_ty(safe_coord_minus(y,h)))
+		end_lookup(f)
+
+		make_only_visible(f, svrec_ty_any()+hrec_ty_any()+vrec_ty_any())
+		start_mark_lookup(f)
+		for y in all_coords:
+			create_sub_mid(f, [svrec_ty(y)], [hrec_ty('nil')], [],
+				hrec_ty(y))
+		end_lookup(f)
+
+def prop_hor_x_width(f):
+	make_only_visible(f, hrec_w_any()+hrec_tw_any()+grec_sw_any())
+	start_mark_lookup(f)
+	for w1 in group_sizes_len_one_to(max_hor_group_len):
+		for w2 in all_coords:
+			create_sub_mid(f, [hrec_w(w1),hrec_tw(w2)], [grec_sw('nil')], [],
+				grec_sw(safe_coord_size_div(w2,w1)))
+	end_lookup(f)
+
+	make_only_visible(f, hrec_tw_any()+grec_w_any()+grec_sw_any()+grec_tw_any())
+	start_mark_lookup(f)
+	for w in all_glyph_sizes:
+		for s in all_group_scalings:
+			create_sub_mid(f, [grec_w(w),grec_sw(s)], [grec_tw('nil')], [],
+				grec_tw(safe_size_mult_to_coord(s,w)))
+	end_lookup(f)
+
+	make_only_visible(f, hrec_tw_any()+grec_tw_any()+shrec_tw_any())
+	start_mark_lookup(f)
+	for w1 in all_coords:
+		for w2 in all_coords:
+			create_sub_mid(f, [hrec_tw(w1),grec_tw(w2)], [shrec_tw('nil')], [],
+				shrec_tw(safe_coord_minus(w1,w2)))
+	end_lookup(f)
+
+	make_only_visible(f, hrec_tx_any()+grec_tw_any()+shrec_tx_any())
+	start_mark_lookup(f)
+	for x in all_coords:
+		for w in all_coords:
+			create_sub_mid(f, [hrec_tx(x),grec_tw(w)], [shrec_tx('nil')], [],
+				shrec_tx(safe_coord_plus(x,w)))
+	end_lookup(f)
+
+	make_only_visible(f, hrec_tx_any()+grec_tx_any())
+	start_mark_lookup(f)
+	for x in all_coords:
+		create_sub_mid(f, [hrec_tx(x)], [grec_tx('nil')], [],
+			grec_tx(x))
+	end_lookup(f)
+
+	for n in range(max_hor_group_len-1,0,-1):
+		make_only_visible(f, shrec_w_any()+shrec_tw_any()+grec_sw_any()+hrec_tx_any())
+		start_mark_lookup(f)
+		for w1 in group_sizes_len(n):
+			for w2 in all_coords:
+				create_sub_mid(f, [shrec_w(w1),shrec_tw(w2)], [grec_sw('nil')], [],
+					grec_sw(safe_coord_size_div(w2,w1)))
+		end_lookup(f)
+
+		make_only_visible(f, shrec_tw_any()+grec_w_any()+grec_sw_any()+grec_tw_any()+hrec_tx_any())
+		start_mark_lookup(f)
+		for w in all_glyph_sizes:
+			for s in all_group_scalings:
+				create_sub_mid(f, [grec_w(w),grec_sw(s)], [grec_tw('nil')], [],
+					grec_tw(safe_size_mult_to_coord(s,w)))
+		end_lookup(f)
+
+		make_only_visible(f, shrec_tw_any()+grec_tw_any()+hrec_tx_any())
+		start_mark_lookup(f)
+		for w1 in all_coords:
+			for w2 in all_coords:
+				create_sub_mid(f, [shrec_tw(w1),grec_tw(w2)], [shrec_tw('nil')], [],
+					shrec_tw(safe_coord_minus(w1,w2)))
+		end_lookup(f)
+
+		make_only_visible(f, shrec_tx_any()+grec_tw_any()+hrec_tx_any())
+		start_mark_lookup(f)
+		for x in all_coords:
+			for w in all_coords:
+				create_sub_mid(f, [shrec_tx(x),grec_tw(w)], [shrec_tx('nil')], [],
+					shrec_tx(safe_coord_plus(x,w)))
+		end_lookup(f)
+
+		make_only_visible(f, shrec_tx_any()+grec_tx_any()+hrec_tx_any())
+		start_mark_lookup(f)
+		for x in all_coords:
+			create_sub_mid(f, [shrec_tx(x)], [grec_tx('nil')], [],
+				grec_tx(x))
+		end_lookup(f)
+
+def prop_hor_y(f):
+	make_only_visible(f, hrec_ty_any()+shrec_ty_any())
+	start_mark_lookup(f)
+	for y in all_coords:
+		create_sub_mid(f, [hrec_ty(y)], [shrec_ty('nil')], [],
+			shrec_ty(y))
+	end_lookup(f)
+
+	for n in range(max_hor_group_len-1):
+		start_mark_lookup(f)
+		for y in all_coords:
+			create_sub_mid(f, [shrec_ty(y)], [shrec_ty('nil')], [],
+				shrec_ty(y))
+		end_lookup(f)
+
+def prop_hor_height(f):
+	make_only_visible(f, hrec_th_any()+shrec_th_any())
+	start_mark_lookup(f)
+	for h in all_coords:
+		create_sub_mid(f, [hrec_th(h)], [shrec_th('nil')], [],
+			shrec_th(h))
+	end_lookup(f)
+
+	for n in range(max_hor_group_len-1):
+		start_mark_lookup(f)
+		for h in all_coords:
+			create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
+				shrec_th(h))
+		end_lookup(f)
+
+def scale_glyphs(f):
+	start_lookup(f)
+	for s in all_group_scalings:
+		create_sub(f, [grec_sw(s,'base')], [grec_sw(min(s,unit_scale),'base')])
+	end_lookup(f)
+
+	make_only_visible(f, grec_h_any()+grec_sh_any()+grec_th_any())
+	start_mark_lookup(f)
+	for h1 in all_glyph_sizes:
+		for h2 in all_coords:
+			create_sub_mid(f, [grec_h(h1)], [grec_sh('nil')], [grec_th(h2)],
+				grec_sh(min(safe_coord_size_div(h2,h1),unit_scale)))
+	end_lookup(f)
+
+	make_only_visible(f, grec_s_any()+grec_sw_any()+grec_sh_any())
+	start_mark_lookup(f)
+	for s1 in all_glyph_scalings:
+		for s2 in all_glyph_scalings:
+			create_sub_mid(f, [], [grec_s('nil')], [grec_sw(s1),grec_sh(s2)], 
+				grec_s(min(s1,s2)))
+	end_lookup(f)
+
+	# start_lookup(f)
+	# for s in all_glyph_scalings:
+		# for g in all_glyphs:
+			# create_sub(f, [grec_s(s),g], ['a'])
+	# end_lookup(f)
+
+	# TODO
+
+# Make symbols visible. 
+def test_convert(f):
+	# start_lookup(f)
+	# create_sub(f, [shrec_tx('nil','base')], [shrec_tx('nil','mark')])
+	# create_sub(f, [grec_s('nil','base')], [grec_w(333,'mark')])
+	# create_sub(f, [shrec_w(0,'base')], [shrec_w(0,'mark')])
+	# create_sub(f, [shrec_w('nil','base')], [shrec_w('nil','mark')])
+	# create_sub(f, [grec_w(333,'base')], [grec_w(333,'mark')])
+	# create_sub(f, [grec_tx('nil','base')], [grec_tx('nil','mark')])
+	# create_sub(f, [grec_h(666,'base')], [grec_h(666,'mark')])
+	# end_lookup(f)
+	# start_mark_lookup(f)
+	# create_sub_mid(f, [hrec_bw('nil','mark')], [grec_w(333,'mark')], [], 'a')
+	# create_sub_mid(f, [hrec_bw('nil','mark')], [grec_w(333,'mark')], [], 'a')
+	# create_sub_mid(f, [], [grec_w(333,'mark')], [], 'e')
+	# create_sub_mid(f, [grec_w(333,'mark')], [grec_h(666,'mark')], [], 'f')
+	# create_sub_mid(f, [shrec_tx('nil','mark')], [grec_h(666,'mark')], [], 'f')
+	# create_sub_mid(f, [], [grec_tx('nil','mark')], [], 'p')
+	# create_sub_mid(f, [shrec_tx('nil','mark')], [shrec_tx('nil','mark')], [], 'q')
+	# create_sub_mid(f, [], [shrec_w(0,'mark')], [], 't')
+	# create_sub_mid(f, [], [shrec_w('nil','mark')], [grec_w(333,'mark'),shrec_w(0,'mark')], 'q')
+	# create_sub_mid(f, [shrec_w('nil','mark')], [grec_w(333,'mark')], [], 'a')
+	# end_lookup(f)
+
+	start_lookup(f)
+	create_sub(f, [hor_open()], ['h','o'])
+	create_sub(f, [hor_close()], ['h','c'])
+	create_sub(f, [vert_open()], ['v','o'])
+	create_sub(f, [vert_close()], ['v','c'])
+	# create_sub(f, [shrec_w(0,'mark')], ['a'])
+	# create_sub(f, [grec_w(333,'mark')], ['b'])
+	# create_sub(f, [shrec_w(333,'mark')], ['c'])
+	# create_sub(f, [shrec_w('nil','mark')], ['x'])
+	# create_sub(f, [grec_w(999,'mark')], ['d'])
+	create_sub(f, [vrec_h(333,'base')], ['a'])
+	create_sub(f, [vrec_h(666,'base')], ['b'])
+	create_sub(f, [vrec_h(999,'base')], ['c'])
+	create_sub(f, [vrec_h(999+333,'base')], ['d'])
+	create_sub(f, [vrec_h(999+666,'base')], ['e'])
+	end_lookup(f)
+
+	return
+	start_lookup(f)
+	# create_sub(f, [shrec_w('nil','mark')], ['x'])
+	# for sym in grec_s_any('base'):
+		# create_sub(f, [sym], ['g','b','s'])
+	# for sym in grec_w_any('base'):
+		# create_sub(f, [sym], ['g','b','w'])
+	# for sym in grec_h_any('base'):
+		# create_sub(f, [sym], ['g','b','h'])
+	# for sym in grec_sw_any('base'):
+		# create_sub(f, [sym], ['g','b','s','w'])
+	# for sym in grec_sh_any('base'):
+		# create_sub(f, [sym], ['g','b','s','h'])
+	# for sym in hrec_any('base'):
+		# create_sub(f, [sym], ['h','b'])
+	# for sym in shrec_any('base'):
+		# create_sub(f, [sym], ['s','h','b'])
+	# for sym in vrec_any('base'):
+		# create_sub(f, [sym], ['v','b'])
+	# for sym in svrec_any('base'):
+		# create_sub(f, [sym], ['s','v','b'])
+
+	for sym in record_symbols('base'):
+		create_sub(f, [sym], ['b'])
+	for sym in record_symbols('mark'):
+		create_sub(f, [sym], ['m'])
+	for sym in grec_aux_all():
+		create_sub(f, [sym], ['g'])
+	end_lookup(f)
+
+def test_features(f):
+	return
+	start_named_lookup(f, "pretesting")
+	create_sub(f, ['A'], ['a',grec_ty('nil')])
+	create_sub(f, ['B'], [grec_tw('nil'),'B'])
+	create_sub(f, ['C'], [grec_tx('nil'),'C'])
+	create_sub(f, ['D'], [grec_th('nil'),'D'])
+	end_named_lookup(f, "pretesting")
+	start_named_lookup(f, "testing")
+	create_pos(f, [], [grec_tw('nil')], [], 500, 500, 0, 0)
+	create_pos(f, [], [grec_tx('nil')], [], 800, 800, 0, 0)
+	create_pos(f, [], [grec_th('nil')], [], 1000, 1000, 0, 0)
+	create_pos(f, [], ['A'], [], 0, 0, -1000, 0)
+	create_pos(f, [], ['B'], [], 0, 0, -1000, 0)
+	create_pos(f, [], ['C'], [], 0, 0, -1000, 0)
+	create_pos(f, [], ['D'], [], 0, 0, -1000, 0)
+	# create_pos(f, [], [grec_sw('nil')], [], 0, 0, -1000, 1000)
+	# create_pos(f, [], ['B'], [], 0, 0, 0, 0)
+	# create_pos(f, [], [grec_sw(500)], [], 0, 0, -500, 0)
+	# create_pos(f, [], ['C'], [], 0, 0, -500, 0)
+	# create_pos(f, [], ['a'], [], 500, 500, 0, 0)
+	# create_pos(f, [], ['b'], [], 500, 500, 0, 0)
+	# f.write('position A <anchor 300 300>;')
+	# f.write('pos base e <anchor 300 300>;')
+	# f.write('pos e\' <0 0 0 0> f;')
+	#f.write(create_sub(f, ['x\'', 'y'], ['y']))
+	end_named_lookup(f, "testing")
+	return
+
+def write_features(f):
+	f.write('markClass [ B C D ] <anchor 0 0> @MYMARK;\n')
+	start_feat(f)
+	initialize(f)
+	add_brackets(f)
+	remove_brackets(f)
+	add_records(f)
+	sum_widths(f)
+	max_heights(f)
+	max_widths(f)
+	sum_heights(f)
+	# target_x(f)
+	# target_y(f)
+	# target_width(f)
+	# target_height(f)
+	# prop_vert_x(f)
+	# prop_vert_width(f)
+	# prop_vert_y_height(f)
+	# prop_hor_x_width(f)
+	# prop_hor_y(f)
+	# prop_hor_height(f)
+	# scale_glyphs(f)
+	test_convert(f)
+	test_features(f)
+	end_feat(f)
+	#f.write('feature mkmk {\n')
+	#f.write('lookup xxx {\n')
+	#f.write('pos mark ' + grec_tw('nil') + ' <anchor 0 0> mark @MYMARK;\n')
+	#f.write('pos mark ' + grec_tx('nil') + ' <anchor 0 0> mark @MYMARK;\n')
+	#f.write('pos mark ' + grec_th('nil') + ' <anchor 0 0> mark @MYMARK;\n')
+	#f.write('} xxx;\n')
+	#f.write('} mkmk;\n')
+
+##################################################
+
+font = fontforge.open(font_sfd)
+make_non_mark_glyphs(font)
+add_aux_symbols_to(font)
+
+for lookup in font.gsub_lookups:
+	font.removeLookup(lookup)
+
+f = open(feature_file_name, 'w')
+write_features(f)
+f.close()
+
+font.mergeFeature(feature_file_name)
+
+font.generate(font_otf)
