@@ -1,0 +1,3 @@
+python prepare_font.py
+
+firefox examples.html
