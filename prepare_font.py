@@ -718,21 +718,20 @@ def prop_vert_width(f):
 			svrec_tw(w))
 	end_lookup(f)
 
-	"""
+	
 	start_reversal_mark_lookup(f)
 	for w in all_coords:
 		create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
-			svrec_tw(w))
+			svrec_tw(w), True)
 	end_lookup(f)
 	"""
-	# TODO change for upper bit
 	for n in range(max_vert_group_len-1):
 		start_mark_lookup(f)
 		for w in all_coords:
 			create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
 				svrec_tw(w))
 		end_lookup(f)
-	
+	"""
 	make_only_visible(f, hrec_tw_any()+svrec_tw_any())
 	start_mark_lookup(f)
 	for w in all_coords:
