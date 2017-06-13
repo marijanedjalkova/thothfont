@@ -4,8 +4,8 @@ from constants import *
 from feature_file_format import *
 
 font_sfd = 'myfont.sfd'
-font_otf = 'myfont.otf'
-feature_file_name = 'hiero.fea'
+font_otf = 'myfont1.otf'
+feature_file_name = 'hiero1.fea'
 
 ############################################
 # Auxiliary symbols. The type t is indicated by a suffix 'base' or 'mark'.
@@ -498,14 +498,22 @@ def add_records(f):
 
 def sum_widths(f):
 	make_only_visible(f, [hrec_bw('nil','')]+hrec_w_any()+shrec_w_any()+grec_w_any())
+	"""
+	start_reversal_mark_lookup(f)
+	for w1 in all_glyph_sizes:
+		w2 = 0
+		create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)], shrec_w(w1+w2))
+	end_lookup(f)
+	"""
+	# TODO need upper bit
 	for n in range(max_hor_group_len-1):
 		start_mark_lookup(f)
 		for w1 in all_glyph_sizes:
 			for w2 in group_sizes_len(n):
 				create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)],
-					shrec_w(w1+w2))
+					shrec_w(w1+w2), True)
 		end_lookup(f)
-
+	
 	start_mark_lookup(f)
 	for w1 in all_glyph_sizes:
 		for w2 in group_sizes_len_zero_to(max_hor_group_len-1):
@@ -521,6 +529,18 @@ def sum_widths(f):
 
 def max_heights(f):
 	make_only_visible(f, [hrec_h('nil','')]+shrec_h_any()+grec_h_any())
+	"""
+	start_reversal_mark_lookup(f)
+	for h1 in all_glyph_sizes:
+		tail_heights = all_glyph_sizes
+		for h2 in tail_heights:
+			#raise Exception
+			create_sub_mid(f, [], [shrec_h('nil')], [grec_h(h1),shrec_h(h2)], 
+				shrec_h(max(h1,h2)), True)
+	end_lookup(f)
+	"""
+	# TODO actually we need the upper bit onstead of the lower one
+	# this produces 14, 15, 16
 	for n in range(max_hor_group_len-1):
 		start_mark_lookup(f)
 		for h1 in all_glyph_sizes:
@@ -539,6 +559,16 @@ def max_heights(f):
 
 def max_widths(f):
 	make_only_visible(f, [vrec_w('nil','')]+svrec_w_any()+hrec_bw_any())
+	"""
+	start_reversal_mark_lookup(f)
+	for w1 in all_glyph_sizes:
+		tail_widths = [0] 
+		for w2 in tail_widths:
+			create_sub_mid(f, [], [svrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
+				svrec_w(max(w1,w2)))
+	end_lookup(f)
+	"""
+	# TODO we actually need the bit above instead
 	for n in range(max_vert_group_len-1):
 		start_mark_lookup(f)
 		for w1 in all_glyph_sizes:
@@ -547,7 +577,7 @@ def max_widths(f):
 				create_sub_mid(f, [], [svrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
 					svrec_w(max(w1,w2)))
 		end_lookup(f)
-
+	
 	start_mark_lookup(f)
 	for w1 in all_glyph_sizes:
 		for w2 in all_glyph_sizes_and_zero:
@@ -557,6 +587,14 @@ def max_widths(f):
 
 def sum_heights(f):
 	make_only_visible(f, [vrec_bh('nil','')]+vrec_h_any()+svrec_h_any()+hrec_h_any())
+	"""
+	start_reversal_mark_lookup(f)
+	for h1 in all_glyph_sizes:
+		h2 = 0
+		create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2))
+	end_lookup(f)
+	"""
+	# TODO we actually need ther bit above
 	for n in range(max_vert_group_len-1):
 		start_mark_lookup(f)
 		for h1 in all_glyph_sizes:
@@ -564,7 +602,7 @@ def sum_heights(f):
 				create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], 
 					svrec_h(h1+h2))
 		end_lookup(f)
-
+	
 	start_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		for h2 in group_sizes_len_zero_to(max_vert_group_len-1):
@@ -641,14 +679,21 @@ def prop_vert_x(f):
 		create_sub_mid(f, [vrec_tx(x)], [svrec_tx('nil')], [],
 			svrec_tx(x))
 	end_lookup(f)
-
+	"""
+	start_reversal_mark_lookup(f)
+	for x in all_coords:
+		create_sub_mid(f, [svrec_tx(x)], [svrec_tx('nil')], [],
+			svrec_tx(x))
+	end_lookup(f)
+	"""
+	# TODO change for the upper bit
 	for n in range(max_vert_group_len-1):
 		start_mark_lookup(f)
 		for x in all_coords:
 			create_sub_mid(f, [svrec_tx(x)], [svrec_tx('nil')], [],
 				svrec_tx(x))
 		end_lookup(f)
-
+	
 	make_only_visible(f, hrec_tx_any()+svrec_tx_any())
 	start_mark_lookup(f)
 	for x in all_coords:
@@ -673,13 +718,21 @@ def prop_vert_width(f):
 			svrec_tw(w))
 	end_lookup(f)
 
+	"""
+	start_reversal_mark_lookup(f)
+	for w in all_coords:
+		create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
+			svrec_tw(w))
+	end_lookup(f)
+	"""
+	# TODO change for upper bit
 	for n in range(max_vert_group_len-1):
 		start_mark_lookup(f)
 		for w in all_coords:
 			create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
 				svrec_tw(w))
 		end_lookup(f)
-
+	
 	make_only_visible(f, hrec_tw_any()+svrec_tw_any())
 	start_mark_lookup(f)
 	for w in all_coords:
@@ -1071,13 +1124,22 @@ def prop_hor_y(f):
 		create_sub_mid(f, [hrec_ty(y)], [shrec_ty('nil')], [],
 			shrec_ty(y))
 	end_lookup(f)
+	
+	start_reversal_mark_lookup(f)
+	for y in all_coords:
+		create_sub_mid(f, [shrec_ty(y)], [shrec_ty('nil')], [],
+			shrec_ty(y), True)
+	end_lookup(f)
 
+	"""
+	# TODO need the upper bit
 	for n in range(max_hor_group_len-1):
 		start_mark_lookup(f)
 		for y in all_coords:
 			create_sub_mid(f, [shrec_ty(y)], [shrec_ty('nil')], [],
 				shrec_ty(y))
 		end_lookup(f)
+	"""
 
 	make_only_visible(f, grec_ty_any()+shrec_ty_any())
 	start_mark_lookup(f)
@@ -1093,14 +1155,21 @@ def prop_hor_height(f):
 		create_sub_mid(f, [hrec_th(h)], [shrec_th('nil')], [],
 			shrec_th(h))
 	end_lookup(f)
-
+	"""
+	start_reversal_mark_lookup(f)
+	for h in all_coords:
+		create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
+			shrec_th(h))
+	end_lookup(f)
+	"""
+	# TODO need the upper bit
 	for n in range(max_hor_group_len-1):
 		start_mark_lookup(f)
 		for h in all_coords:
 			create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
 				shrec_th(h))
 		end_lookup(f)
-
+	
 	make_only_visible(f, grec_th_any()+shrec_th_any())
 	start_mark_lookup(f)
 	for h in all_coords:
