@@ -1128,11 +1128,10 @@ def prop_hor_y(f):
 	start_reversal_mark_lookup(f)
 	for y in all_coords:
 		create_sub_mid(f, [shrec_ty(y)], [shrec_ty('nil')], [],
-			shrec_ty(y), True)
+			shrec_ty(y))
 	end_lookup(f)
 
 	"""
-	# TODO need the upper bit
 	for n in range(max_hor_group_len-1):
 		start_mark_lookup(f)
 		for y in all_coords:
@@ -1155,21 +1154,20 @@ def prop_hor_height(f):
 		create_sub_mid(f, [hrec_th(h)], [shrec_th('nil')], [],
 			shrec_th(h))
 	end_lookup(f)
-	"""
+	
 	start_reversal_mark_lookup(f)
 	for h in all_coords:
 		create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
 			shrec_th(h))
 	end_lookup(f)
 	"""
-	# TODO need the upper bit
 	for n in range(max_hor_group_len-1):
 		start_mark_lookup(f)
 		for h in all_coords:
 			create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
 				shrec_th(h))
 		end_lookup(f)
-	
+	"""
 	make_only_visible(f, grec_th_any()+shrec_th_any())
 	start_mark_lookup(f)
 	for h in all_coords:
