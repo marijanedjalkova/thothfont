@@ -27,15 +27,21 @@ def start_lookup(f, t='liga'):
 	global n_lookups
 	name = t + str(n_lookups)
 	start_named_lookup(f, name)
+	print "starting {}".format(name)
 
 def start_mark_lookup(f):
 	start_lookup(f)
 	ignore_base_feature(f)
 
+def start_reversal_mark_lookup(f):
+	start_mark_lookup(f)
+	right_to_left_feature(f)
+
 def end_lookup(f, t='liga'):
 	global n_lookups
 	name = t + str(n_lookups)
 	end_named_lookup(f, name)
+	print "ending {}".format(name)
 	n_lookups += 1
 
 def named_lookup_call(f, name):
@@ -59,8 +65,11 @@ def create_sub(f, elems_in, elems_out):
 	f.write('    sub ' + ' '.join(elems_in) + ' by ' + ' '.join(elems_out) + ';\n')
 
 # Create substitution with middle part.
-def create_sub_mid(f, begin, mid, end, target):
-	f.write('    sub ' + ' '.join(begin + to_mid(mid) + end) + ' by ' + target + ';\n')
+def create_sub_mid(f, begin, mid, end, target, to_print = False):
+	s = '    sub ' + ' '.join(begin + to_mid(mid) + end) + ' by ' + target + ';\n'
+	if to_print:
+		print s
+	f.write(s)
 
 # Create position.
 def create_pos(f, begin, mid, end, x, y, x_adv, y_adv):
