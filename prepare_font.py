@@ -552,7 +552,7 @@ def max_widths(f):
 	for w1 in all_glyph_sizes:
 		for w2 in all_glyph_sizes:
 			create_sub_mid(f, [], [svrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
-				svrec_w(max(w1,w2)), True)
+				svrec_w(max(w1,w2)))
 	end_lookup(f)
 
 	start_mark_lookup(f)
@@ -564,14 +564,14 @@ def max_widths(f):
 
 def sum_heights(f):
 	make_only_visible(f, [vrec_bh('nil','')]+vrec_h_any()+svrec_h_any()+hrec_h_any())
-	"""
+	
 	start_reversal_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		for h2 in group_sizes_len(1):
-			create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2))
+			create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2), True)
 	end_lookup(f)
 	"""
-	# TODO we actually need ther bit above
+	# TODO we actually need the bit above
 	for n in range(max_vert_group_len-1):
 		start_mark_lookup(f)
 		for h1 in all_glyph_sizes:
@@ -579,7 +579,7 @@ def sum_heights(f):
 				create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], 
 					svrec_h(h1+h2))
 		end_lookup(f)
-	
+	"""
 	start_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		for h2 in group_sizes_len_zero_to(max_vert_group_len-1):
