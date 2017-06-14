@@ -570,16 +570,7 @@ def sum_heights(f):
 		for h2 in group_sizes_len(1):
 			create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2), True)
 	end_lookup(f)
-	"""
-	# TODO we actually need the bit above
-	for n in range(max_vert_group_len-1):
-		start_mark_lookup(f)
-		for h1 in all_glyph_sizes:
-			for h2 in group_sizes_len(n):
-				create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], 
-					svrec_h(h1+h2))
-		end_lookup(f)
-	"""
+
 	start_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		for h2 in group_sizes_len_zero_to(max_vert_group_len-1):
