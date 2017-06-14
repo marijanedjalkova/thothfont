@@ -685,14 +685,7 @@ def prop_vert_x(f):
 		create_sub_mid(f, [svrec_tx(x)], [svrec_tx('nil')], [],
 			svrec_tx(x))
 	end_lookup(f)
-	"""
-	for n in range(max_vert_group_len-1):
-		start_mark_lookup(f)
-		for x in all_coords:
-			create_sub_mid(f, [svrec_tx(x)], [svrec_tx('nil')], [],
-				svrec_tx(x))
-		end_lookup(f)
-	"""
+
 	make_only_visible(f, hrec_tx_any()+svrec_tx_any())
 	start_mark_lookup(f)
 	for x in all_coords:
@@ -723,14 +716,7 @@ def prop_vert_width(f):
 		create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
 			svrec_tw(w))
 	end_lookup(f)
-	"""
-	for n in range(max_vert_group_len-1):
-		start_mark_lookup(f)
-		for w in all_coords:
-			create_sub_mid(f, [svrec_tw(w)], [svrec_tw('nil')], [],
-				svrec_tw(w))
-		end_lookup(f)
-	"""
+
 	make_only_visible(f, hrec_tw_any()+svrec_tw_any())
 	start_mark_lookup(f)
 	for w in all_coords:
@@ -1129,15 +1115,6 @@ def prop_hor_y(f):
 			shrec_ty(y))
 	end_lookup(f)
 
-	"""
-	for n in range(max_hor_group_len-1):
-		start_mark_lookup(f)
-		for y in all_coords:
-			create_sub_mid(f, [shrec_ty(y)], [shrec_ty('nil')], [],
-				shrec_ty(y))
-		end_lookup(f)
-	"""
-
 	make_only_visible(f, grec_ty_any()+shrec_ty_any())
 	start_mark_lookup(f)
 	for y in all_coords:
@@ -1158,14 +1135,7 @@ def prop_hor_height(f):
 		create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
 			shrec_th(h))
 	end_lookup(f)
-	"""
-	for n in range(max_hor_group_len-1):
-		start_mark_lookup(f)
-		for h in all_coords:
-			create_sub_mid(f, [shrec_th(h)], [shrec_th('nil')], [],
-				shrec_th(h))
-		end_lookup(f)
-	"""
+
 	make_only_visible(f, grec_th_any()+shrec_th_any())
 	start_mark_lookup(f)
 	for h in all_coords:
