@@ -511,7 +511,7 @@ def sum_widths(f):
 		for w1 in all_glyph_sizes:
 			for w2 in group_sizes_len(n):
 				create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)],
-					shrec_w(w1+w2), True)
+					shrec_w(w1+w2))
 		end_lookup(f)
 	
 	start_mark_lookup(f)
@@ -529,27 +529,15 @@ def sum_widths(f):
 
 def max_heights(f):
 	make_only_visible(f, [hrec_h('nil','')]+shrec_h_any()+grec_h_any())
-	"""
+	
 	start_reversal_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		tail_heights = all_glyph_sizes
 		for h2 in tail_heights:
-			#raise Exception
 			create_sub_mid(f, [], [shrec_h('nil')], [grec_h(h1),shrec_h(h2)], 
 				shrec_h(max(h1,h2)), True)
 	end_lookup(f)
-	"""
-	# TODO actually we need the upper bit onstead of the lower one
-	# this produces 14, 15, 16
-	for n in range(max_hor_group_len-1):
-		start_mark_lookup(f)
-		for h1 in all_glyph_sizes:
-			tail_heights = [0] if n == 0 else all_glyph_sizes
-			for h2 in tail_heights:
-				create_sub_mid(f, [], [shrec_h('nil')], [grec_h(h1),shrec_h(h2)], 
-					shrec_h(max(h1,h2)))
-		end_lookup(f)
-
+	
 	start_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		for h2 in all_glyph_sizes_and_zero:
@@ -590,8 +578,8 @@ def sum_heights(f):
 	"""
 	start_reversal_mark_lookup(f)
 	for h1 in all_glyph_sizes:
-		h2 = 0
-		create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2))
+		for h2 in group_sizes_len(1):
+			create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2))
 	end_lookup(f)
 	"""
 	# TODO we actually need ther bit above
