@@ -535,7 +535,7 @@ def max_heights(f):
 		tail_heights = all_glyph_sizes
 		for h2 in tail_heights:
 			create_sub_mid(f, [], [shrec_h('nil')], [grec_h(h1),shrec_h(h2)], 
-				shrec_h(max(h1,h2)), True)
+				shrec_h(max(h1,h2)))
 	end_lookup(f)
 	
 	start_mark_lookup(f)
@@ -547,25 +547,14 @@ def max_heights(f):
 
 def max_widths(f):
 	make_only_visible(f, [vrec_w('nil','')]+svrec_w_any()+hrec_bw_any())
-	"""
+	
 	start_reversal_mark_lookup(f)
 	for w1 in all_glyph_sizes:
-		tail_widths = [0] 
-		for w2 in tail_widths:
+		for w2 in all_glyph_sizes:
 			create_sub_mid(f, [], [svrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
-				svrec_w(max(w1,w2)))
+				svrec_w(max(w1,w2)), True)
 	end_lookup(f)
-	"""
-	# TODO we actually need the bit above instead
-	for n in range(max_vert_group_len-1):
-		start_mark_lookup(f)
-		for w1 in all_glyph_sizes:
-			tail_widths = [0] if n == 0 else all_glyph_sizes
-			for w2 in tail_widths:
-				create_sub_mid(f, [], [svrec_w('nil')], [hrec_bw(w1),svrec_w(w2)], 
-					svrec_w(max(w1,w2)))
-		end_lookup(f)
-	
+
 	start_mark_lookup(f)
 	for w1 in all_glyph_sizes:
 		for w2 in all_glyph_sizes_and_zero:
