@@ -1,52 +1,76 @@
 
+class Lookup:
+
+	def __init__(self):
+		self.flags = []
+		self.rules = []
+
+	def addItem(self, item, isFlag = False):
+		if isFlag:
+			self.flags.append(item)
+		else:
+			self.rules.append(item)
+
+	def toVOLT(self):
+		pass
+
+class Feature:
+
+	def __init__(self):
+		self.lookups = []
+
+	def addLookup(self, lookup):
+		self.lookups.append(lookup)
+
+	def toVOLT(self):
+		pass
+
 
 def main():
 	with open("hiero.fea") as feaFile:
 		content = feaFile.readlines()
 	inFeature = False
-	inLookup = False
 	featureName = ""
 	lookupName = ""
+	lookupsInFeature = []
+	currentLookup = None
 	for line in content:
 		tokens = line.split()
 		if len(tokens)==0:
 			continue
 		if not tokens[0] == "feature" and not inFeature:
-			print "skipping {}".format(line)
+			# skip that for now
 			continue
-		# if not line.startswith("lookup") and not inLookup:
-		# 	print "2 skipping {}".format(line)
-		# 	continue
 		if tokens[0] == "feature":
 			featureName = tokens[1]
 			if inFeature:
 				print "Nested features not allowed"
 				raise Exception
 			inFeature = True
-			print featureName
 			continue
 		if tokens[0] == "lookup":
 			lookupName = tokens[1]
-			if inLookup:
+			if currentLookup is not None:
 				print "Nested lookups not allowed: lookup {}".format(lookupName)
 				raise Exception
-			inLookup = True
+			currentLookup = Lookup()
 			continue
 		if tokens[0] == "}":
 			name = tokens[1][:-1]
-			print "NAME END {}".format(name)
 			if name == featureName:
-				# end of feature 
+				lookupsInFeature = []
 				inFeature = False 
-				print "end of ft {}".format(featureName)
 			elif name == lookupName:
-				inLookup = False 
+				lookupsInFeature.append(currentLookup)
+				currentLookup = None 
 			else:
 				print "Unrecognized name: {}".format(name)
 				raise Exception 
 			continue
 		# this is a sub or pos 
-
+		if tokens[0] == "lookupflag":
+			flag = tokens[1][:-1]
+			currentLookup.addItem(flag, True)
 
 
 
