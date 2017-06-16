@@ -84,15 +84,29 @@ def file_to_features():
 
 def define_glyphs(data, result_file):
 	if 'glyphs' in data:
-		for entry in data['glyphs']:
+		for glyph in data['glyphs']:
 			pass
 		# TODO not in our fea file so skip
 
 def define_scripts(data, result_file):
-	if 'scripts' in data:
-		for entry in data['scripts']:
-			pass
-			# TODO NOW
+	if 'scripts' in data: 
+		for script in data['scripts']:
+			result_file.write(("DEF_SCRIPT NAME \"{}\" TAG \"{}\"").format(script['name'], script['tag']))
+			if 'langs' in script:
+				for lang in script['langs']:
+					result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"").format(lang['name'], lang['tag']))
+					# in the dict, only need to name the features 
+					if 'features' in lang:
+						for feature in lang['features']:
+							result_file.write(("DEF_FEATURE NAME \"{}\" TAG \"{}\"").format(feature['name'], feature['tag']))
+							if 'lookups' in feature:
+								lks = ""
+								for lookup in feature['lookups']:
+									lks += "LOOKUP \"{}\" ".format(lookup[name])
+								result_file.write(lks)
+							result_file.write("END_FEATURE")
+					result_file.write("END_LANGSYS")
+			result_file.write("END_SCRIPT")
 
 def define_groups(data, result_file):
 	if 'groups' in data:
