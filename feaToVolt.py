@@ -1,4 +1,14 @@
 import os
+
+class Rule:
+
+	def __init__(self, feature_string):
+		self.feature_string = feature_string
+		# sub svrec.h.nil.mark' hrec.h.333.mark svrec.h.333.mark by svrec.h.666.mark;
+
+	def toVOLT(self):
+		return "" # TODO
+
 class Lookup:
 
 	def __init__(self, name):
@@ -12,25 +22,39 @@ class Lookup:
 		else:
 			self.rules.append(item)
 
+	def context_toVOLT(self):
+		return "" # TODO look at primes?
+
+	def marks_toVOLT(self):
+		return "ALL" # TODO
+
+	def base_toVOLT(self):
+		if "IgnoreBaseGlyphs" in self.flags:
+			return ""
+		return "PROCESS_BASE" 
+
+	def direction_toVOLT(self):
+		if "RightToLeft" in self.flags:
+			return "RTL"
+		return "LTR"
+
 	def toVOLT(self):
-		direction = "RTL" if "RightToLeft" in self.flags else direction = "LTR"
-		marks = "ALL"
-		base = "PROCESS_BASE" # possibly empty string
+		direction = self.direction_toVOLT()
+		marks = self.marks_toVOLT()
+		base = self.base_toVOLT()
 		res = ("DEF_LOOKUP \"{}\" {} PROCESS_MARKS {} DIRECTION {}\n").format(feature.name, base, marks, direction)
 		res += "IN_CONTEXT\n"
-		# TODO possibly
+		res + self.context_toVOLT()
 		res += "END_CONTEXT\n"
 		if self.isSUB():
 			res =+ "AS_SUBSTITUTION\n"
 			for rule in self.rules:
-				pass
-				# TODO
-			res += "END_SUB\n"
+				res += rule.toVOLT() 
+			res += "END_SUBSTITUTION\n"
 		else:
 			res += "AS_POSITION\n"
 			for rule in self.rules:
-				pass
-				# TODO
+				res += rule.toVOLT() 
 			res += "END_POSITION\n"
 
 		retun res
@@ -102,7 +126,7 @@ def file_to_features():
 		if tokens[0] == "lookupflag":
 			flag = tokens[1][:-1]
 			currentLookup.addItem(flag, True)
-		currentLookup.addItem(line)
+		currentLookup.addItem(Rule(line))
 	# data ready at this point
 	res = {'features': features}
 	# TODO might need to add more	
