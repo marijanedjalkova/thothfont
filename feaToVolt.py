@@ -3,42 +3,59 @@ import os
 class Rule:
 
 	def __init__(self, feature_string):
+		# skip semicolon at the end
+		semicolon_index = feature_string.index(";")
+		if semicolon_index != -1:
+			feature_string = feature_string[:semicolon_index]
 		self.feature_string = feature_string
+		self.tokens = self.feature_string.split()
+		if (self.tokens[-1]).endswith(";"):
+			raise Exception
 
-	def getContext(self):
+	def isSUB(self):
+		return self.tokens[0] == "sub"
+
+	def context_toVOLT(self): # might need to filter subs only
+
 		# everything on the LHS that is without the prime
 		res = ""
-		by_index = self.tokens.index("by")
-		needed_tokens = self.tokens[1:by_index]
-		prime_index = -1
-		for t in needed_tokens:
-			if t.endswith("'"):
-				prime_index = needed_tokens.index(t)
-				break
-		if prime_index != -1:
-			context_before = needed_tokens[:prime_index]
-			context_after = needed_tokens[prime_index:]
-			if len(context_before) > 0:
-				res += "LEFT "
-				for b in context_before:
-					res += self.token_toVOLT(b)
-					res += " "
-			if len(context_after) > 0:
-				res += "RIGHT "
-				for a in context_after:
-					res += self.token_toVOLT(a)
-					res += " "
+		if self.isSUB():
+			by_index = self.tokens.index("by")
+			needed_tokens = self.tokens[1:by_index]
+			prime_index = -1
+			for t in needed_tokens:
+				if t.endswith("'"):
+					prime_index = needed_tokens.index(t)
+					break
+			if prime_index != -1:
+				context_before = needed_tokens[:prime_index]
+
+				context_after = needed_tokens[prime_index+1:]
+
+				if len(context_before) > 0:
+					res += "LEFT "
+					for b in context_before:
+						res += self.token_toVOLT(b)
+						res += " "
+				if len(context_after) > 0:
+					res += "RIGHT "
+					for a in context_after:
+						res += self.token_toVOLT(a)
+						res += " "
 		return res
 
 	def getWhatToSub(self):
 		# with the prime 
+		res = ""
 		by_index = self.tokens.index("by")
 		needed_tokens = self.tokens[1:by_index]
 		for t in needed_tokens:
 			if t.endswith("'"):
-				return t[:-1]
-		# if we are here then there is only one thing on the LHS
-		return needed_tokens[0] 
+				return self.token_toVOLT(t[:-1])
+		# if we are here then there is all of the LHS
+		for t in needed_tokens:
+			res += self.token_toVOLT(t)
+		return res
 
 	def getWhatToSubWith(self):
 		by_index = self.tokens.index("by")
@@ -54,8 +71,7 @@ class Rule:
 		return "GLYPH {} ".format(t)
 
 	def toVOLT(self):
-		self.tokens = self.feature_string.split()
-		if self.tokens[0] == "sub":
+		if self.isSUB():
 			return self.sub_toVOLT()
 		return self.pos_toVOLT()
 		
@@ -68,9 +84,9 @@ class Rule:
 		WITH GROUP "controls"
 		END_SUB
 		"""
-		res = "SUB {}\n".format(self.getWhatToSub())
+		res = "SUB \n{}".format(self.getWhatToSub())
 		res += "WITH {}\n".format(self.getWhatToSubWith())
-		res += "END_SUB"
+		res += "END_SUB\n"
 		return res
 
 	def pos_toVOLT(self):
@@ -97,7 +113,9 @@ class Lookup:
 			self.rules.append(item)
 
 	def context_toVOLT(self):
-		return "" # TODO look at primes of rules?
+		if len(self.rules) > 0:
+			return self.rules[0].context_toVOLT()
+		return "" 
 
 	def marks_toVOLT(self):
 		return "ALL" # TODO there are other cases
@@ -112,16 +130,22 @@ class Lookup:
 			return "RTL"
 		return "LTR"
 
+	def isSUB(self):
+		if len(self.rules) == 0:
+			return False 
+		return self.rules[0].isSUB()
+
+
 	def toVOLT(self):
 		direction = self.direction_toVOLT()
 		marks = self.marks_toVOLT()
 		base = self.base_toVOLT()
-		res = ("DEF_LOOKUP \"{}\" {} PROCESS_MARKS {} DIRECTION {}\n").format(feature.name, base, marks, direction)
+		res = ("DEF_LOOKUP \"{}\" {} PROCESS_MARKS {} DIRECTION {}\n").format(self.name, base, marks, direction)
 		res += "IN_CONTEXT\n"
-		res + self.context_toVOLT()
+		res += self.context_toVOLT()
 		res += "END_CONTEXT\n"
 		if self.isSUB():
-			res =+ "AS_SUBSTITUTION\n"
+			res += "AS_SUBSTITUTION\n"
 			for rule in self.rules:
 				res += rule.toVOLT() 
 			res += "END_SUBSTITUTION\n"
@@ -131,7 +155,7 @@ class Lookup:
 				res += rule.toVOLT() 
 			res += "END_POSITION\n"
 
-		retun res
+		return res
 
 class Feature:
 
@@ -147,12 +171,12 @@ class Feature:
 		# TODO
 
 	def toVOLT(self):
-		res = ("DEF_FEATURE NAME \"{}\" TAG \"{}\"\n").format(feature.name, self.get_tag())
+		res = ("DEF_FEATURE NAME \"{}\" TAG \"{}\"\n").format(self.name, self.get_tag())
 		lks = ""
 		for lookupName in self.lookupNames:
 			lks += "LOOKUP \"{}\" ".format(lookupName)
-			res += lks
-			res += "\n"
+		res += lks
+		res += "\n"
 		res += "END_FEATURE\n"
 		return res
 	
@@ -164,6 +188,7 @@ def file_to_features():
 	with open("hiero.fea") as feaFile:
 		content = feaFile.readlines()
 	features = []
+	lookups = []
 	currentLookup = None
 	currentFeature = None
 	for line in content:
@@ -191,7 +216,8 @@ def file_to_features():
 				features.append(currentFeature)
 				currentFeature = None
 			elif name == currentLookup.name:
-				currentFeature.addLookup(currentLookup)
+				currentFeature.addLookup(name)
+				lookups.append(currentLookup)
 				currentLookup = None 
 			else:
 				print "Unrecognized name: {}".format(name)
@@ -200,9 +226,10 @@ def file_to_features():
 		if tokens[0] == "lookupflag":
 			flag = tokens[1][:-1]
 			currentLookup.addItem(flag, True)
+			continue
 		currentLookup.addItem(Rule(line))
 	# data ready at this point
-	res = {'features': features}
+	res = {'features': features, 'lookups':lookups}
 	# TODO might need to add more	
 	return res
 
@@ -234,9 +261,9 @@ def define_groups(data, result_file):
 			# TODO maybe
 
 def define_lookups(data, result_file):
-	if 'features' in data:
-		for feature in data['features']:
-			stringified = feature.toVOLT()
+	if 'lookups' in data:
+		for lookup in data['lookups']:
+			stringified = lookup.toVOLT()
 			result_file.write(stringified)
 
 
