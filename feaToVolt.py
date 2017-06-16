@@ -14,8 +14,16 @@ class Rule:
 		return "" # TODO
 
 	def getWhatToSubWith(self):
-		# the rhs
-		return "" # TODO
+		# the rhs TODO
+		by_index = self.tokens.index("by")
+		needed_tokens = self.tokens[by_index+1:]
+		res = ""
+		for t in needed_tokens:
+			if t.startswith("<"):
+				res += "GROUP {} ".format(t[1:-1])
+			else:
+				res += "GLYPH {} ".format(t)
+		return res
 
 	def toVOLT(self):
 		self.tokens = self.feature_string.split()
