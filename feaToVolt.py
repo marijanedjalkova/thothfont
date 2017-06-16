@@ -82,9 +82,57 @@ def file_to_features():
 	# TODO might need to add more	
 	return res
 
-def create_output(data):
-	define_glyphs()
+def define_glyphs(data, result_file):
+	if 'glyphs' in data:
+		for entry in data['glyphs']:
+			pass
+		# TODO not in our fea file so skip
 
+def define_scripts(data, result_file):
+	if 'scripts' in data:
+		for entry in data['scripts']:
+			pass
+			# TODO NOW
+
+def define_groups(data, result_file):
+	if 'groups' in data:
+		for entry in data['groups']:
+			pass
+			# TODO 
+
+def define_lookups(data, result_file):
+	if 'features' in data:
+		for feature in data['features']:
+			pass
+			# TODO NOW
+
+def define_anchors(data, result_file):
+	if 'anchors' in data:
+		for entry in data['anchors']:
+			pass
+			# TODO not in our fea file so skip
+
+def define_PPEM(data, result_file):
+	if 'ppem' in data:
+		for entry in data['ppem']:
+			pass
+			# TODO not in our fea file so skip
+
+def define_CMAP(data, result_file):
+	if 'cmap' in data:
+		for entry in data['cmap']:
+			pass
+			# TODO not in our fea file so skip
+
+def create_output(data):
+	with open("projfile.vtp", "w") as result_file:
+		define_glyphs(data, result_file)
+		define_scripts(data, result_file)
+		define_groups(data, result_file)
+		define_lookups(data, result_file)
+		define_anchors(data, result_file)
+		define_PPEM(data, result_file)
+		define_CMAP(data, result_file)
 
 
 def main():
