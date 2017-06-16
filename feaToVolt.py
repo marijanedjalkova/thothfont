@@ -4,9 +4,34 @@ class Rule:
 
 	def __init__(self, feature_string):
 		self.feature_string = feature_string
-		# sub svrec.h.nil.mark' hrec.h.333.mark svrec.h.333.mark by svrec.h.666.mark;
+
 
 	def toVOLT(self):
+		tokens = self.feature_string.split()
+		if tokens[0] == "sub":
+			return self.sub_toVOLT()
+		return self.pos_toVOLT()
+		
+
+	def sub_toVOLT(self):
+		# sub svrec.h.nil.mark' hrec.h.333.mark svrec.h.333.mark by svrec.h.666.mark;
+		
+
+		"""
+		SUB GLYPH "Qf" GROUP "controls"
+		WITH GROUP "controls"
+		END_SUB
+		"""
+		return ""
+
+	def pos_toVOLT(self):
+		# pos anchor.pos.1000.1000 period' <1000 1000 -1000 0> ;
+		"""ATTACH GROUP "quadratBases" GROUP "quadratCartouches"
+		TO GROUP "stems0-v" AT ANCHOR "a1"
+		END_ATTACH"""
+
+		"""ADJUST_SINGLE GLYPH "mtr" BY POS DX 915 END_POS
+		END_ADJUST""" # there are more
 		return "" # TODO
 
 class Lookup:
@@ -23,10 +48,10 @@ class Lookup:
 			self.rules.append(item)
 
 	def context_toVOLT(self):
-		return "" # TODO look at primes?
+		return "" # TODO look at primes of rules?
 
 	def marks_toVOLT(self):
-		return "ALL" # TODO
+		return "ALL" # TODO there are other cases
 
 	def base_toVOLT(self):
 		if "IgnoreBaseGlyphs" in self.flags:
