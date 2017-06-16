@@ -5,24 +5,37 @@ class Rule:
 	def __init__(self, feature_string):
 		self.feature_string = feature_string
 
+	def getContext(self):
+		# everything on the LHS that is without the prime
+		return "" # TODO
+
+	def getWhatToSub(self):
+		# with the prime 
+		return "" # TODO
+
+	def getWhatToSubWith(self):
+		# the rhs
+		return "" # TODO
 
 	def toVOLT(self):
-		tokens = self.feature_string.split()
-		if tokens[0] == "sub":
+		self.tokens = self.feature_string.split()
+		if self.tokens[0] == "sub":
 			return self.sub_toVOLT()
 		return self.pos_toVOLT()
 		
 
 	def sub_toVOLT(self):
-		# sub svrec.h.nil.mark' hrec.h.333.mark svrec.h.333.mark by svrec.h.666.mark;
-		
+		# sub svrec.h.nil.mark' hrec.h.333.mark svrec.h.333.mark by svrec.h.666.mark;		
 
 		"""
 		SUB GLYPH "Qf" GROUP "controls"
 		WITH GROUP "controls"
 		END_SUB
 		"""
-		return ""
+		res = "SUB {}\n".format(self.getWhatToSub())
+		res += "WITH {}\n".format(self.getWhatToSubWith())
+		res += "END_SUB"
+		return res
 
 	def pos_toVOLT(self):
 		# pos anchor.pos.1000.1000 period' <1000 1000 -1000 0> ;
