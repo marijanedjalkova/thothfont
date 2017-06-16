@@ -11,10 +11,15 @@ class Rule:
 
 	def getWhatToSub(self):
 		# with the prime 
-		return "" # TODO
+		by_index = self.tokens.index("by")
+		needed_tokens = self.tokens[1:by_index]
+		for t in needed_tokens:
+			if t.endswith("'"):
+				return t[:-1]
+		# if we are here then there is only one thing on the LHS
+		return needed_tokens[0] 
 
 	def getWhatToSubWith(self):
-		# the rhs TODO
 		by_index = self.tokens.index("by")
 		needed_tokens = self.tokens[by_index+1:]
 		res = ""
