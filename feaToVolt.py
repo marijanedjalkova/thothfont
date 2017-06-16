@@ -13,24 +13,50 @@ class Lookup:
 			self.rules.append(item)
 
 	def toVOLT(self):
-		subdirectory = "voltproj"
-		pathname = "{}.vtl".format(self.name)
-		print pathname
-		with open(os.path.join(subdirectory, pathname), "w+") as outputfile:
-			pass
+		direction = "RTL" if "RightToLeft" in self.flags else direction = "LTR"
+		marks = "ALL"
+		base = "PROCESS_BASE" # possibly empty string
+		res = ("DEF_LOOKUP \"{}\" {} PROCESS_MARKS {} DIRECTION {}\n").format(feature.name, base, marks, direction)
+		res += "IN_CONTEXT\n"
+		# TODO possibly
+		res += "END_CONTEXT\n"
+		if self.isSUB():
+			res =+ "AS_SUBSTITUTION\n"
+			for rule in self.rules:
+				pass
+				# TODO
+			res += "END_SUB\n"
+		else:
+			res += "AS_POSITION\n"
+			for rule in self.rules:
+				pass
+				# TODO
+			res += "END_POSITION\n"
+
+		retun res
 
 class Feature:
 
 	def __init__(self, name):
 		self.name = name
-		self.lookups = []
+		self.lookupNames = []
 
-	def addLookup(self, lookup):
-		self.lookups.append(lookup)
+	def addLookup(self, lookupName):
+		self.lookupNames.append(lookupName)
+
+	def get_tag(self):
+		return "mkmk"
+		# TODO
 
 	def toVOLT(self):
-		for l in self.lookups:
-			l.toVOLT()
+		res = ("DEF_FEATURE NAME \"{}\" TAG \"{}\"\n").format(feature.name, self.get_tag())
+		lks = ""
+		for lookupName in self.lookupNames:
+			lks += "LOOKUP \"{}\" ".format(lookupName)
+			res += lks
+			res += "\n"
+		res += "END_FEATURE\n"
+		return res
 	
 
 def file_to_features():
@@ -91,34 +117,30 @@ def define_glyphs(data, result_file):
 def define_scripts(data, result_file):
 	if 'scripts' in data: 
 		for script in data['scripts']:
-			result_file.write(("DEF_SCRIPT NAME \"{}\" TAG \"{}\"").format(script['name'], script['tag']))
+			result_file.write(("DEF_SCRIPT NAME \"{}\" TAG \"{}\"\n").format(script['name'], script['tag']))
 			if 'langs' in script:
 				for lang in script['langs']:
-					result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"").format(lang['name'], lang['tag']))
+					result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"\n").format(lang['name'], lang['tag']))
 					# in the dict, only need to name the features 
 					if 'features' in lang:
 						for feature in lang['features']:
-							result_file.write(("DEF_FEATURE NAME \"{}\" TAG \"{}\"").format(feature['name'], feature['tag']))
-							if 'lookups' in feature:
-								lks = ""
-								for lookup in feature['lookups']:
-									lks += "LOOKUP \"{}\" ".format(lookup[name])
-								result_file.write(lks)
-							result_file.write("END_FEATURE")
-					result_file.write("END_LANGSYS")
-			result_file.write("END_SCRIPT")
+							feature_stringified = feature.toVOLT()
+							result_file.write(feature_stringified)
+					result_file.write("END_LANGSYS\n")
+			result_file.write("END_SCRIPT\n")
 
 def define_groups(data, result_file):
 	if 'groups' in data:
 		for entry in data['groups']:
 			pass
-			# TODO 
+			# TODO maybe
 
 def define_lookups(data, result_file):
 	if 'features' in data:
 		for feature in data['features']:
-			pass
-			# TODO NOW
+			stringified = feature.toVOLT()
+			result_file.write(stringified)
+
 
 def define_anchors(data, result_file):
 	if 'anchors' in data:
