@@ -7,7 +7,28 @@ class Rule:
 
 	def getContext(self):
 		# everything on the LHS that is without the prime
-		return "" # TODO
+		res = ""
+		by_index = self.tokens.index("by")
+		needed_tokens = self.tokens[1:by_index]
+		prime_index = -1
+		for t in needed_tokens:
+			if t.endswith("'"):
+				prime_index = needed_tokens.index(t)
+				break
+		if prime_index != -1:
+			context_before = needed_tokens[:prime_index]
+			context_after = needed_tokens[prime_index:]
+			if len(context_before) > 0:
+				res += "LEFT "
+				for b in context_before:
+					res += self.token_toVOLT(b)
+					res += " "
+			if len(context_after) > 0:
+				res += "RIGHT "
+				for a in context_after:
+					res += self.token_toVOLT(a)
+					res += " "
+		return res
 
 	def getWhatToSub(self):
 		# with the prime 
@@ -24,11 +45,13 @@ class Rule:
 		needed_tokens = self.tokens[by_index+1:]
 		res = ""
 		for t in needed_tokens:
-			if t.startswith("<"):
-				res += "GROUP {} ".format(t[1:-1])
-			else:
-				res += "GLYPH {} ".format(t)
+			res += self.token_toVOLT(t)
 		return res
+
+	def token_toVOLT(self, t):
+		if t.startswith("<"):
+			return "GROUP {} ".format(t[1:-1])
+		return "GLYPH {} ".format(t)
 
 	def toVOLT(self):
 		self.tokens = self.feature_string.split()
