@@ -15,7 +15,7 @@ class Rule:
 	def isSUB(self):
 		return self.tokens[0] == "sub"
 
-	def context_toVOLT(self): # might need to filter subs only
+	def context_toVOLT(self): 
 
 		# everything on the LHS that is without the prime
 		res = ""
@@ -42,6 +42,8 @@ class Rule:
 					for a in context_after:
 						res += self.token_toVOLT(a)
 						res += " "
+		else:
+			pass 
 		return res
 
 	def getWhatToSub(self):
@@ -113,9 +115,11 @@ class Lookup:
 			self.rules.append(item)
 
 	def context_toVOLT(self):
+		res = "IN_CONTEXT\n"
 		if len(self.rules) > 0:
-			return self.rules[0].context_toVOLT()
-		return "" 
+			res += self.rules[0].context_toVOLT()
+		res += "END_CONTEXT\n"
+		return res 
 
 	def marks_toVOLT(self):
 		return "PROCESS_MARKS ALL" # TODO there are other cases
@@ -135,21 +139,26 @@ class Lookup:
 			return False 
 		return self.rules[0].isSUB()
 
-
 	def toVOLT(self):
 		direction = self.direction_toVOLT()
 		marks = self.marks_toVOLT()
 		base = self.base_toVOLT()
 		res = ("DEF_LOOKUP \"{}\" {} {} {}\n").format(self.name, base, marks, direction)
-		res += "IN_CONTEXT\n"
 		res += self.context_toVOLT()
-		res += "END_CONTEXT\n"
 		if self.isSUB():
 			res += "AS_SUBSTITUTION\n"
 			for rule in self.rules:
 				res += rule.toVOLT() 
 			res += "END_SUBSTITUTION\n"
 		else:
+
+			"""ATTACH GROUP "quadratBases" GROUP "quadratCartouches"
+				TO GROUP "stems0-v" AT ANCHOR "a1"
+				END_ATTACH"""
+
+			"""ADJUST_SINGLE GLYPH "mbr" BY POS DX 1372 END_POS
+				END_ADJUST"""
+
 			res += "AS_POSITION\n"
 			for rule in self.rules:
 				res += rule.toVOLT() 
