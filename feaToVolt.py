@@ -200,6 +200,7 @@ class Group:
 			res += "GLYPH \"{}\" ".format(item)
 		res += "END_ENUM\n"
 		res += "END_GROUP\n"
+		return res
 	
 
 def file_to_features():
@@ -306,8 +307,8 @@ def write_feature_definitions_VOLT(data, result_file):
 def define_groups(data, result_file):
 	if 'groups' in data:
 		for entry in data['groups']:
-			pass
-			# TODO maybe
+			stringified = entry.toVOLT()
+			result_file.write(stringified)
 
 def define_lookups(data, result_file):
 	if 'lookups' in data:
