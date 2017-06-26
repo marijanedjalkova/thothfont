@@ -178,7 +178,28 @@ class Feature:
 		res += lks
 		res += "\n"
 		res += "END_FEATURE\n"
-		return res
+		return res 
+
+class Group:
+
+	def __init__(self, name, items = []):
+		self.name = name 
+		self.items = items 
+
+	def addItem(self, item):
+		self.items.append(item)
+
+	def toVOLT(self):
+		"""DEF_GROUP "cartouches"
+		 ENUM GROUP "quadratBases" GROUP "quadratCartouches" END_ENUM
+		END_GROUP"""
+		res = "DEF_GROUP \"{}\"\n".format(self.name)
+		res += "ENUM "
+		for item in self.items:
+			# TODO can be groups, too(?)
+			res += "GLYPH \"{}\" ".format(item)
+		res += "END_ENUM\n"
+		res += "END_GROUP\n"
 	
 
 def file_to_features():
@@ -187,13 +208,27 @@ def file_to_features():
 
 	with open("hiero.fea") as feaFile:
 		content = feaFile.readlines()
+	groups = []
 	features = []
 	lookups = []
 	currentLookup = None
 	currentFeature = None
-	for line in content:
+	for i in range(len(content)):
+		line = content[i]
 		tokens = line.split()
 		if len(tokens)==0:
+			continue
+		if tokens[0] == "markClass":
+			endtokens = tokens 
+			j = i + 1
+			while not endtokens[-1].endswith(";"):
+				# read next line, add to tokens 
+				endtokens = content[j].split() 
+				tokens.extend(endtokens) 
+				j += 1
+			# no need to add anything else 
+			# can now create a group
+			groups.append(parseGroup(tokens))
 			continue
 		if not tokens[0] == "feature" and currentFeature is None:
 			# skip that for now, that's the header, might be groups
@@ -229,9 +264,16 @@ def file_to_features():
 			continue
 		currentLookup.addItem(Rule(line))
 	# data ready at this point
-	res = {'features': features, 'lookups':lookups}
+	res = {'groups': groups, 'features': features, 'lookups':lookups}
 	# TODO might need to add more	
 	return res
+
+def parseGroup(tokens):
+	openIndex = tokens.index("[")
+	closeIndex = tokens.index("]")
+	items = tokens[openIndex+1: closeIndex]
+	name = tokens[-1][1:-1]
+	return Group(name, items)
 
 def define_glyphs(data, result_file):
 	if 'glyphs' in data:
@@ -251,6 +293,7 @@ def define_scripts(data, result_file):
 					result_file.write("END_LANGSYS\n")
 			result_file.write("END_SCRIPT\n")
 	else:
+		# TODO might actually create a default script if none are defined
 		write_feature_definitions_VOLT(data, result_file)
 
 def write_feature_definitions_VOLT(data, result_file):
