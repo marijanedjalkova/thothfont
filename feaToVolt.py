@@ -118,17 +118,17 @@ class Lookup:
 		return "" 
 
 	def marks_toVOLT(self):
-		return "ALL" # TODO there are other cases
+		return "PROCESS_MARKS ALL" # TODO there are other cases
 
 	def base_toVOLT(self):
 		if "IgnoreBaseGlyphs" in self.flags:
-			return ""
+			return " "
 		return "PROCESS_BASE" 
 
 	def direction_toVOLT(self):
 		if "RightToLeft" in self.flags:
-			return "RTL"
-		return "LTR"
+			return "DIRECTION RTL"
+		return "DIRECTION LTR"
 
 	def isSUB(self):
 		if len(self.rules) == 0:
@@ -140,7 +140,7 @@ class Lookup:
 		direction = self.direction_toVOLT()
 		marks = self.marks_toVOLT()
 		base = self.base_toVOLT()
-		res = ("DEF_LOOKUP \"{}\" {} PROCESS_MARKS {} DIRECTION {}\n").format(self.name, base, marks, direction)
+		res = ("DEF_LOOKUP \"{}\" {} {} {}\n").format(self.name, base, marks, direction)
 		res += "IN_CONTEXT\n"
 		res += self.context_toVOLT()
 		res += "END_CONTEXT\n"
@@ -247,12 +247,18 @@ def define_scripts(data, result_file):
 				for lang in script['langs']:
 					result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"\n").format(lang['name'], lang['tag']))
 					# in the dict, only need to name the features 
-					if 'features' in lang:
-						for feature in lang['features']:
-							feature_stringified = feature.toVOLT()
-							result_file.write(feature_stringified)
+					write_feature_definitions_VOLT(lang, result_file)
 					result_file.write("END_LANGSYS\n")
 			result_file.write("END_SCRIPT\n")
+	else:
+		write_feature_definitions_VOLT(data, result_file)
+
+def write_feature_definitions_VOLT(data, result_file):
+	if 'features' in data:
+		for feature in data['features']:
+			feature_stringified = feature.toVOLT()
+			result_file.write(feature_stringified)
+
 
 def define_groups(data, result_file):
 	if 'groups' in data:
