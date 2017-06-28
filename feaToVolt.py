@@ -319,8 +319,8 @@ def define_scripts(data, result_file):
 					result_file.write("END_LANGSYS\n")
 			result_file.write("END_SCRIPT\n")
 	else:
-		result_file.write(("DEF_SCRIPT NAME \"{}\" TAG \"{}\"\n").format("DEFAULTSCRIPT", "defa"))
-		result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"\n").format("Dafault", "dflt"))
+		result_file.write(("DEF_SCRIPT NAME \"{}\" TAG \"{}\"\n").format("DEFAULTSCRIPT", "egyp"))
+		result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"\n").format("Default", "dflt"))
 		write_feature_definitions_VOLT(data, result_file)
 		result_file.write("END_LANGSYS\n")
 		result_file.write("END_SCRIPT\n")
@@ -373,6 +373,7 @@ def create_output(data):
 		define_anchors(data, result_file)
 		define_PPEM(data, result_file)
 		define_CMAP(data, result_file)
+		result_file.write("END")
 
 
 def main():
