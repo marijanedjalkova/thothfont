@@ -319,8 +319,12 @@ def define_scripts(data, result_file):
 					result_file.write("END_LANGSYS\n")
 			result_file.write("END_SCRIPT\n")
 	else:
-		# TODO might actually create a default script if none are defined
+		result_file.write(("DEF_SCRIPT NAME \"{}\" TAG \"{}\"\n").format("DEFAULTSCRIPT", "defa"))
+		result_file.write(("DEF_LANGSYS NAME \"{}\" TAG \"{}\"\n").format("Dafault", "dflt"))
 		write_feature_definitions_VOLT(data, result_file)
+		result_file.write("END_LANGSYS\n")
+		result_file.write("END_SCRIPT\n")
+		
 
 def write_feature_definitions_VOLT(data, result_file):
 	if 'features' in data:
