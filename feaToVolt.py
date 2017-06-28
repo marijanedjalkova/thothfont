@@ -99,7 +99,12 @@ class Rule:
 
 		"""ADJUST_SINGLE GLYPH "mtr" BY POS DX 915 END_POS
 		END_ADJUST""" # there are more
-		return "" # TODO
+
+		self.adjust_pair_toVOLT()
+		return "" # TODO the rest of cases
+
+	def adjust_pair_toVOLT(self):
+		pass
 
 class Lookup:
 
@@ -171,16 +176,26 @@ class Feature:
 	def __init__(self, name):
 		self.name = name
 		self.lookupNames = []
+		self.tag = self.get_tag()
 
 	def addLookup(self, lookupName):
 		self.lookupNames.append(lookupName)
 
 	def get_tag(self):
-		return "mkmk"
-		# TODO
+		nameTags = {"Character composition/decomposition substitution": "ccmp",
+		"Standard ligature substitution": "liga",
+		"Contextual ligature substitution": "clig",
+		"Pair kerning" : "kern",
+		"Mark to base positioning": "mark",
+		"Mark to mark positioning": "mkmk"}
+		if self.name in nameTags:
+			return nameTags[self.name]
+		if self.name in nameTags.values():
+			return self.name
+		return self.name[:4]
 
 	def toVOLT(self):
-		res = ("DEF_FEATURE NAME \"{}\" TAG \"{}\"\n").format(self.name, self.get_tag())
+		res = ("DEF_FEATURE NAME \"{}\" TAG \"{}\"\n").format(self.name, self.tag)
 		lks = ""
 		for lookupName in self.lookupNames:
 			lks += "LOOKUP \"{}\" ".format(lookupName)
@@ -229,6 +244,7 @@ def file_to_features():
 		if len(tokens)==0:
 			continue
 		if tokens[0] == "markClass":
+		# this is a GROUP
 			endtokens = tokens 
 			j = i + 1
 			while not endtokens[-1].endswith(";"):
