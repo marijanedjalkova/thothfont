@@ -1,4 +1,5 @@
 import os
+import csv
 
 class Rule:
 
@@ -227,11 +228,11 @@ class Group:
 		return res
 	
 
-def file_to_features():
+def file_to_features(filename):
 	# TODO might need to not only return
 	# features but also more than that
 
-	with open("hiero.fea") as feaFile:
+	with open(filename) as feaFile:
 		content = feaFile.readlines()
 	groups = []
 	features = []
@@ -304,8 +305,7 @@ def parseGroup(tokens):
 def define_glyphs(data, result_file):
 	if 'glyphs' in data:
 		for glyph in data['glyphs']:
-			pass
-		# TODO not in our fea file so skip
+			result_file.write(glyph + "\n")
 
 def define_scripts(data, result_file):
 	if 'scripts' in data: 
@@ -364,8 +364,8 @@ def define_CMAP(data, result_file):
 			pass
 			# TODO not in our fea file so skip
 
-def create_output(data):
-	with open("projfile.vtp", "w") as result_file:
+def create_output(filename, data):
+	with open(filename, "w") as result_file:
 		define_glyphs(data, result_file)
 		define_scripts(data, result_file)
 		define_groups(data, result_file)
@@ -375,10 +375,36 @@ def create_output(data):
 		define_CMAP(data, result_file)
 		result_file.write("END")
 
+def processNames(filename):
+	res = []
+	with open(filename, 'rb') as f:
+		reader = csv.reader(f)
+		glyph_list_l = list(reader)
+	glyph_list = glyph_list_l[0]
+	index = 0
+	for glyph in glyph_list:
+		res.append(name_toVOLT(glyph, index))
+		index += 1
+	return res
+
+def name_toVOLT(name, index):
+	glyphtype = None
+	for typename in ['mark', 'base', 'liga', 'component']: 
+		# these names are random, so this might need to be changed
+		# haven't seen liga or component in any of the existing ones
+		if typename in name:
+			glyphtype = typename.upper()
+			break
+	if not glyphtype:
+		glyphtype = "UNKNOWN"
+	return "DEF_GLYPH \"{}\" ID {} TYPE {} END_GLYPH".format(name, index, glyphtype)
+
 
 def main():
-	data = file_to_features()
-	create_output(data)
+	names = processNames("glyphnames.csv")
+	data = file_to_features("hiero1.fea")
+	data['glyphs'] = names
+	create_output("projfile1withnames.vtp", data)
 
 
 if __name__ == '__main__':
