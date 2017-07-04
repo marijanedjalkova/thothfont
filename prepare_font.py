@@ -3,9 +3,9 @@ import fontforge
 from constants import *
 from feature_file_format import *
 
-font_sfd = 'myfont.sfd'
-font_otf = 'myfont1.otf'
-feature_file_name = 'hiero1.fea'
+font_sfd = 'myfont1.sfd'
+font_otf = 'myfontttftest.ttf'
+feature_file_name = 'hiero1test.fea'
 
 ############################################
 # Auxiliary symbols. The type t is indicated by a suffix 'base' or 'mark'.
@@ -498,11 +498,11 @@ def add_records(f):
 
 def sum_widths(f):
 	make_only_visible(f, [hrec_bw('nil','')]+hrec_w_any()+shrec_w_any()+grec_w_any())
-	"""
+	
 	start_reversal_mark_lookup(f)
 	for w1 in all_glyph_sizes:
-		w2 = 0
-		create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)], shrec_w(w1+w2))
+		for w2 in all_glyph_sizes:
+			create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)], shrec_w(w1+w2), True)
 	end_lookup(f)
 	"""
 	# TODO need upper bit
@@ -511,9 +511,9 @@ def sum_widths(f):
 		for w1 in all_glyph_sizes:
 			for w2 in group_sizes_len(n):
 				create_sub_mid(f, [], [shrec_w('nil')], [grec_w(w1),shrec_w(w2)],
-					shrec_w(w1+w2))
+					shrec_w(w1+w2), True)
 		end_lookup(f)
-	
+	"""
 	start_mark_lookup(f)
 	for w1 in all_glyph_sizes:
 		for w2 in group_sizes_len_zero_to(max_hor_group_len-1):
@@ -568,7 +568,7 @@ def sum_heights(f):
 	start_reversal_mark_lookup(f)
 	for h1 in all_glyph_sizes:
 		for h2 in group_sizes_len(1):
-			create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2), True)
+			create_sub_mid(f, [], [svrec_h('nil')], [hrec_h(h1),svrec_h(h2)], svrec_h(h1+h2))
 	end_lookup(f)
 
 	start_mark_lookup(f)
@@ -1349,3 +1349,10 @@ f.close()
 font.mergeFeature(feature_file_name)
 
 font.generate(font_otf)
+
+import csv
+names = [g for g in font]
+with open("glyphnames.csv",'wb') as resultFile:
+    wr = csv.writer(resultFile)
+    wr.writerow(names)
+
