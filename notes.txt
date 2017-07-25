@@ -1,0 +1,44 @@
+- Andrew Glass's example works in Chrome (img andrewglasschrome) and absolutely does not work in Firefox (img andrewglassff). 
+Firefox message: "The character encoding of the HTML document was not declared. The document will render with garbled text 
+in some browser configurations if the document contains characters from outside the US-ASCII range. 
+The character encoding of the page must be declared in the document or in the transfer protocol."
+- In our example:
+1. Take .sfd -> prepare_font.py -> .otf/.ttf, .fea 
+2. .fea -> feaToVolt.py -> .vtp 
+3. Open .otf/.ttf, .vtp in VOLT 
+4. Make adjustments 
+5. Ship font. 
+
+Doesn't work.
+Took myfont1.sfd -> prepare_font.py -> myfontttftest1807.ttf, hiero1test1807.fea
+Opened myfontttftest1807.ttf in VOLT, added a substitution rule, shipped to testres1807.otf, the rule doesn't work.
+
+Took a custom created font, customfont.otf (CFF), customfont.ttf, customfont.sfd.
+1. Put customfont.otf through VOLT. Names could not be imported, and no glyphs were displayed.
+ Shipped to customotfshipped.otf, but the rules didn't work.
+2. Put customfont.ttf through VOLT. Glyphs shown, names imported. Rules don't work.
+3. customfont.sfd -> prepare_font -> customfont_prepared.ttf
+To run the script, changed aux_code_area in constants.py from 500 to 4.
+This one is not even showing anything. 
+
+In the email I say that I worked with a .ttf file. Tried but fontforge produces fonts that, 
+when viewed in Windows, show only "TrueType Outlines", not "OpenType Layout, TrueType Outlines."
+
+The problem was the name of the script. It works if it is "Latin <latn>". Proof is when
+created testshipped.otf from ttftest.ttf.
+
+However, the main project still doesn't work. 
+Created customfont1907.ttf. And the test worked in VOLT. 
+customfont1907.ttf -> prepare_font.py -> hierotest1907custom.fea, customfont1907_prepared.ttf.
+
+customfont1907_prepared.ttf doesn't pass the test - when opened in VOLT, no glyphs showing, even the ones that were there initially. 
+The names get imported, but asterisk does not exist. Some glyphs missing? There are 548 of them. Need to check fontforge for how many of them there are.
+Opening in fontforge, but really hard to see how many glyphs. No images showing. 
+
+Should try with the original prepare_font.
+
+Abandoned working on this, tested myfont.ttf with VOLT and it worked.
+Using prepare_font_orig created a .ttf which works, and importing projfile.vtp also makes it compile. Still need to finish the positional lookups though. 
+
+
+
