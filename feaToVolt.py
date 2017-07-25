@@ -389,14 +389,17 @@ def processNames(filename):
 
 def name_toVOLT(name, index):
 	glyphtype = None
-	for typename in ['mark', 'base', 'liga', 'component']: 
-		# these names are random, so this might need to be changed
-		# haven't seen liga or component in any of the existing ones
+	for typename in ['mark', 'base', 'ligature', 'component']: 
+		# these names are from VOLT
+		# but they might not have been used in .fea, so be careful here
 		if typename in name:
 			glyphtype = typename.upper()
 			break
 	if not glyphtype:
-		glyphtype = "UNKNOWN"
+		# if no info, assign base, but might need to change later
+		# because there should be something like "unknown" but 
+		# for some reason it doesn't work in VOLT 
+		glyphtype = "BASE"
 	return "DEF_GLYPH \"{}\" ID {} TYPE {} END_GLYPH".format(name, index, glyphtype)
 
 
